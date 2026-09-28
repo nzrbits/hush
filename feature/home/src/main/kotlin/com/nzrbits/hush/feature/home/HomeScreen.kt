@@ -191,11 +191,13 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             val blockedPackages = remember(blockStatus) {
                 blockStatus.manual.map { it.packageName }.toSet() + blockStatus.scheduled.flatMap { it.first.packageNames }.toSet()
             }
-            // Takes the remaining height but no more than it needs; scrolls only when it overflows.
+            // Takes all remaining height, so the quick actions stay at the bottom. Scrolling is enabled
+            // only when the list overflows; otherwise vertical drags reach the root swipe gestures.
+            val favoritesScroll = rememberScrollState()
             Column(
                 Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState()),
+                    .weight(1f)
+                    .verticalScroll(favoritesScroll, enabled = favoritesScroll.maxValue > 0),
             ) {
                 val list = favorites
                 if (list != null && list.isEmpty()) {
@@ -216,7 +218,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(8.dp))
 
             if (cozy) {
                 QuickAction("Fokus & Bildschirmzeit") { navigation.openWellbeing() }
@@ -226,7 +228,11 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                     if (settings.home.showPhone) QuickAction("Telefon") { viewModel.openDialer() }
                     if (settings.home.showAlarm) QuickAction("Wecker") { viewModel.openAlarms() }
                 }
-                if (settings.home.showCamera) QuickAction("Kamera") { viewModel.openCamera() }
+                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    if (settings.home.showCamera) QuickAction("Kamera") { viewModel.openCamera() }
+                    // Always visible: settings must be findable without knowing the long press.
+                    QuickAction("Einstellungen") { navigation.openSettings() }
+                }
             }
             hint?.let {
                 Text(

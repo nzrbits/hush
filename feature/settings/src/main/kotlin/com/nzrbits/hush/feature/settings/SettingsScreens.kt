@@ -84,6 +84,11 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
             HushSpacer(12)
             MascotBubble(text = Sayings.settings(LocalDateTime.now()), state = MascotState.TALK, mascotSize = 64.dp)
         }
+        // Skin switch first: it is the setting people look for.
+        HushSectionHeader("Skin")
+        HushChoiceRow(ThemeMode.entries, settings.appearance.themeMode, { if (it == ThemeMode.MINIMAL) "Minimal" else "Cozy" }) { v -> viewModel.updateAppearance { it.copy(themeMode = v) } }
+        HushRow("Schrift, Hintergrund, Szenen", subtitle = "Größe, Schriftart, Bild, Pixel-Szene", onClick = nav.appearance)
+
         // Same labels and subtitles as the wellbeing hub, so both lists read as one.
         HushSectionHeader("Digital Wellbeing")
         HushRow("App-Blockierung", subtitle = "Aktive Sperren und Übersicht", onClick = nav.blocking)
@@ -99,11 +104,6 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
         HushRow("Uhr, Datum, Schnellzugriffe", onClick = nav.home)
 
         HushSectionHeader("Darstellung")
-        HushRow(
-            "Modus, Schrift, Hintergrund",
-            subtitle = if (settings.appearance.themeMode == ThemeMode.MINIMAL) "Minimal Mode" else "Cozy Mode",
-            onClick = nav.appearance,
-        )
         HushRow("Gesten", onClick = nav.gestures)
         HushRow("Cozy: ${HushConfig.MASCOT_NAME} und Szenen", onClick = nav.cozy)
 

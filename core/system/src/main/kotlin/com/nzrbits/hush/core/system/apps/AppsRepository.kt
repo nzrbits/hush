@@ -58,8 +58,9 @@ class AppsRepository @Inject constructor(
 
     val visibleApps: Flow<List<LauncherApp>> = allApps.map { list -> list.filter { !it.hidden } }
 
+    /** Favourites are alphabetical like the drawer; allApps is already sorted with the collator. */
     val favorites: Flow<List<LauncherApp>> = allApps.map { list ->
-        list.filter { it.isFavorite && !it.hidden }.sortedBy { it.favoriteOrder }
+        list.filter { it.isFavorite && !it.hidden }
     }
 
     val folders: Flow<List<AppFolder>> = folderDao.observeAll().map { it.map(FolderEntity::toModel) }

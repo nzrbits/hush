@@ -35,16 +35,6 @@ class ManageAppsViewModel @Inject constructor(private val apps: AppsRepository) 
     val favorites: StateFlow<List<LauncherApp>> = apps.favorites.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val all: StateFlow<List<LauncherApp>> = apps.allApps.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun move(key: AppKey, delta: Int) = viewModelScope.launch {
-        val current = favorites.value.map { it.key }.toMutableList()
-        val index = current.indexOf(key)
-        val target = index + delta
-        if (index < 0 || target < 0 || target >= current.size) return@launch
-        current.removeAt(index)
-        current.add(target, key)
-        apps.reorderFavorites(current)
-    }
-
     fun setFavorite(key: AppKey, favorite: Boolean) = viewModelScope.launch { apps.setFavorite(key, favorite) }
     fun setHidden(key: AppKey, hidden: Boolean) = viewModelScope.launch { apps.setHidden(key, hidden) }
 }
@@ -59,17 +49,11 @@ fun FavoritesScreen(onBack: () -> Unit, viewModel: ManageAppsViewModel = hiltVie
 
     HushScreen(title = "Favoriten", onBack = onBack) {
         if (favorites.isEmpty()) HushEmptyState("Noch keine Favoriten. Lang auf eine App drücken oder unten hinzufügen.")
-        favorites.forEachIndexed { index, app ->
+        favorites.forEach { app ->
             HushRow(
                 title = app.displayLabel,
                 subtitle = if (app.isWorkProfile) "Arbeitsprofil" else null,
-                trailingContent = {
-                    Row {
-                        HushTextButton("↑", onClick = { viewModel.move(app.key, -1) })
-                        HushTextButton("↓", onClick = { viewModel.move(app.key, +1) })
-                        HushTextButton("Entfernen", onClick = { viewModel.setFavorite(app.key, false) }, danger = true)
-                    }
-                },
+                trailingContent = { HushTextButton("Entfernen", onClick = { viewModel.setFavorite(app.key, false) }, danger = true) },
             )
         }
         HushSectionHeader("Hinzufügen")
@@ -80,7 +64,7 @@ fun FavoritesScreen(onBack: () -> Unit, viewModel: ManageAppsViewModel = hiltVie
             }
         }
         Text(
-            "Favoriten stehen als Textliste auf dem Startbildschirm.",
+            "Favoriten stehen alphabetisch als Textliste auf dem Startbildschirm.",
             style = HushTheme.typography.caption,
             color = colors.muted,
             modifier = Modifier.padding(top = 16.dp),

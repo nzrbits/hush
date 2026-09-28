@@ -69,7 +69,7 @@ fun HushNavGraph(navController: NavHostController, startDestination: String, hom
                 ),
             )
         }
-        composable(HushRoutes.DRAWER) { DrawerScreen(navigation = appActions, onClose = back) }
+        composable(HushRoutes.DRAWER) { DrawerScreen(navigation = appActions, onClose = back, onOpenSettings = { go(HushRoutes.SETTINGS) }) }
 
         composable(HushRoutes.WELLBEING) {
             WellbeingHubScreen(

@@ -54,6 +54,6 @@ tested on a physical phone. Debug APKs are attached to the GitHub releases.
 
 ## Licences
 
-Nunito: SIL Open Font License 1.1, see `licenses/nunito-OFL.txt`. Mr. Nook artwork:
+Nunito and Pixelify Sans: SIL Open Font License 1.1, see `licenses/`. Mr. Nook artwork:
 © nzrbits, from the Mr. Nook project, not covered by any open licence. The Hush source
 code has no licence file yet, so all rights are reserved until one is added.

@@ -39,6 +39,14 @@ private val nunito: FontFamily = FontFamily(
     Font(R.font.nunito, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
 )
 
+/** Pixelify Sans (OFL) for the clock in every mode; it matches the pixel mascot and scenes. */
+@OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+private val pixel: FontFamily = FontFamily(
+    Font(R.font.pixelify_sans, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.pixelify_sans, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+    Font(R.font.pixelify_sans, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+)
+
 /** DEFAULT follows the mode: rounded Nunito for Cozy, the system sans for Minimal. */
 fun fontFamilyFor(choice: FontFamilyChoice, minimal: Boolean): FontFamily = when (choice) {
     FontFamilyChoice.DEFAULT -> if (minimal) FontFamily.SansSerif else nunito
@@ -55,10 +63,12 @@ fun hushTypography(family: FontFamily, scale: Float, minimal: Boolean): HushTypo
         fontWeight = weight,
         lineHeight = (lineHeight * scale).sp,
     )
-    val clockWeight = if (minimal) FontWeight.Light else FontWeight.ExtraBold
+    val clockWeight = if (minimal) FontWeight.Normal else FontWeight.Bold
+    val heroWeight = if (minimal) FontWeight.Light else FontWeight.ExtraBold
     return HushTypography(
-        clock = style(64, clockWeight, 68f),
-        hero = style(40, clockWeight, 44f),
+        // The clock is always pixel: 60 sp so "12:07 AM" still fits a 360 dp wide screen.
+        clock = TextStyle(fontFamily = pixel, fontSize = (60 * scale).sp, fontWeight = clockWeight, lineHeight = (64 * scale).sp),
+        hero = style(40, heroWeight, 44f),
         date = style(16, FontWeight.Normal),
         title = style(24, FontWeight.Bold, 30f),
         section = style(13, FontWeight.SemiBold),

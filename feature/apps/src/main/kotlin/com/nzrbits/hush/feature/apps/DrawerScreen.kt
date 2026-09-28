@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 fun DrawerScreen(
     navigation: AppActionsNavigation,
     onClose: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: DrawerViewModel = hiltViewModel(),
 ) {
     val colors = HushTheme.colors
@@ -131,6 +132,11 @@ fun DrawerScreen(
                         .fillMaxHeight(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 24.dp, end = 4.dp, bottom = 48.dp),
                 ) {
+                    if (state.query.isEmpty()) {
+                        item(key = "hush.settings") {
+                            HushAppItem(label = "Einstellungen", dimmed = true, onClick = { onOpenSettings() })
+                        }
+                    }
                     items.forEach { item ->
                         when (item) {
                             is DrawerItem.Header -> item { HushSectionHeader(item.title) }

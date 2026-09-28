@@ -78,7 +78,18 @@ Applied (30 findings, deduplicated):
 | Settings root | Same labels and subtitles as the wellbeing hub |
 
 Not applied, by decision: Mr. Nook stays in settings in Minimal Mode (wanted); the six
-wellbeing rows stay in the settings root (brief). Open: Cozy Light still shows a black
+wellbeing rows stay in the settings root (brief).
+
+## First phone feedback (0.1.2 -> 0.1.3)
+
+Tested on Yannick's phone, installed as default launcher. Three points, all fixed:
+
+| Feedback | Cause | Fix |
+|---|---|---|
+| Favourites fill only half the screen and scroll | The favourites column and the spacer below it both had `weight(1f)`, so they split the height 50/50 | Favourites column takes all remaining height, quick actions stay at the bottom |
+| Favourites not alphabetical | They were in the order they were added | Alphabetical (same collator as the drawer); reorder buttons removed |
+| Clock should be a pixel clock in every skin | It used the mode's text font | Pixelify Sans (OFL, `licenses/pixelify-sans-OFL.txt`) at 60 sp for the clock only, both modes |
+| Settings not findable | Only reachable by long-pressing free space | "Einstellungen" quick action on home, "Einstellungen" row at the top of the drawer, skin switch as the first section in settings | Open: Cozy Light still shows a black
 frame for the first frames of a cold start because the window background is black.
 
 ## Build
