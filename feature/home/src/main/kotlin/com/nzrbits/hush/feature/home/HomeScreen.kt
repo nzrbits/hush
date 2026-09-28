@@ -1,8 +1,9 @@
 package com.nzrbits.hush.feature.home
 
-import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nzrbits.hush.core.common.HushConfig
 import com.nzrbits.hush.core.common.model.DateFormatChoice
 import com.nzrbits.hush.core.common.model.LauncherApp
 import com.nzrbits.hush.core.common.model.ThemeMode
@@ -65,8 +68,8 @@ data class HomeNavigation(
 
 /**
  * The home screen. Minimal Mode: clock, date, line, favourites. Cozy Mode adds Mr. Nook with
- * a saying, a warm palette and the optional pixel scene. Gestures live on the root box; the
- * favourites column is not scrollable, so drags never fight a list.
+ * a saying, a warm palette and the optional pixel scene. Gestures live on the root box. The
+ * favourites column scrolls only when it overflows, so short lists never steal the swipe.
  */
 @Composable
 fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewModel()) {
@@ -76,11 +79,16 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
     val now by viewModel.now.collectAsStateWithLifecycle()
     val blockStatus by viewModel.blockStatus.collectAsStateWithLifecycle()
     val blockedEvent by viewModel.blockedEvent.collectAsStateWithLifecycle()
+    val charging by viewModel.charging.collectAsStateWithLifecycle()
+    val wallpaper by viewModel.wallpaper.collectAsStateWithLifecycle()
     var selected by remember { mutableStateOf<LauncherApp?>(null) }
     var hint by remember { mutableStateOf<String?>(null) }
     val density = LocalDensity.current
     val swipeThresholdPx = with(density) { 72.dp.toPx() }
     val cozy = settings.appearance.themeMode == ThemeMode.COZY
+
+    // Back on the home screen does nothing. On Android 8 to 11 the default would finish the launcher.
+    BackHandler(enabled = true) {}
 
     fun handle(result: GestureResult) {
         when (result) {
@@ -88,7 +96,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             GestureResult.OpenSettings -> navigation.openSettings()
             GestureResult.OpenWellbeing -> navigation.openWellbeing()
             GestureResult.OpenNotificationLog -> navigation.openNotificationLog()
-            GestureResult.NeedsAccessibility -> hint = "Dafür muss die Bedienungshilfe von Hush an sein."
+            GestureResult.NeedsAccessibility -> hint = "Dafür muss die Bedienungshilfe von ${HushConfig.APP_NAME} an sein. Tippen zum Einrichten."
             GestureResult.Done -> Unit
         }
     }
@@ -116,7 +124,11 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 )
             },
     ) {
-        settings.appearance.wallpaperUri?.let { WallpaperImage(it) }
+        wallpaper?.let { bitmap ->
+            Image(bitmap = bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            // Scrim so the clock stays readable on any photo.
+            Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)))
+        }
         PixelSceneBackground(
             scene = settings.appearance.scene,
             density = settings.appearance.sceneDensity,
@@ -144,9 +156,11 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 color = colors.muted,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            val charging = remember(now) { viewModel.chargingState() }
             if (settings.home.showChargingAnimation && charging.charging) {
-                Text("Lädt · ${charging.percent} %", style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 4.dp))
+                Text(
+                    if (charging.full) "Voll · ${charging.percent} %" else "Lädt · ${charging.percent} %",
+                    style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 4.dp),
+                )
             }
 
             if (cozy && settings.appearance.showMascot) {
@@ -174,24 +188,32 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             }
 
             Spacer(Modifier.height(16.dp))
-            if (favorites.isEmpty()) {
-                Text(
-                    "Keine Favoriten. Nach oben wischen, App lang drücken, „Zu Favoriten hinzufügen“.",
-                    style = HushTheme.typography.body,
-                    color = colors.muted,
-                )
-            }
             val blockedPackages = remember(blockStatus) {
                 blockStatus.manual.map { it.packageName }.toSet() + blockStatus.scheduled.flatMap { it.first.packageNames }.toSet()
             }
-            favorites.forEach { app ->
-                HushAppItem(
-                    label = app.displayLabel,
-                    dimmed = app.packageName in blockedPackages,
-                    secondary = if (app.packageName in blockedPackages) "gesperrt" else null,
-                    onClick = { viewModel.launch(app) },
-                    onLongClick = { selected = app },
-                )
+            // Takes the remaining height but no more than it needs; scrolls only when it overflows.
+            Column(
+                Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                val list = favorites
+                if (list != null && list.isEmpty()) {
+                    Text(
+                        "Keine Favoriten. Nach oben wischen, App lang drücken, „Zu Favoriten hinzufügen“.",
+                        style = HushTheme.typography.body,
+                        color = colors.muted,
+                    )
+                }
+                list?.forEach { app ->
+                    HushAppItem(
+                        label = app.displayLabel,
+                        dimmed = app.packageName in blockedPackages,
+                        secondary = if (app.packageName in blockedPackages) "gesperrt" else null,
+                        onClick = { viewModel.launch(app) },
+                        onLongClick = { selected = app },
+                    )
+                }
             }
 
             Spacer(Modifier.weight(1f))
@@ -209,8 +231,15 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
             hint?.let {
-                Text(it, style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 8.dp))
-                LaunchedEffect(it) { kotlinx.coroutines.delay(4_000); hint = null }
+                Text(
+                    it,
+                    style = HushTheme.typography.caption,
+                    color = colors.muted,
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .clickable { hint = null; navigation.openPermissions() },
+                )
+                LaunchedEffect(it) { kotlinx.coroutines.delay(6_000); hint = null }
             }
         }
     }
@@ -232,26 +261,13 @@ private fun QuickAction(label: String, onClick: () -> Unit) {
     )
 }
 
-@Composable
-private fun WallpaperImage(uri: String) {
-    val context = LocalContext.current
-    val bitmap = remember(uri) {
-        runCatching {
-            context.contentResolver.openInputStream(Uri.parse(uri))?.use { stream ->
-                android.graphics.BitmapFactory.decodeStream(stream)?.asImageBitmap()
-            }
-        }.getOrNull()
-    }
-    bitmap?.let { Image(bitmap = it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
-}
-
 fun formatTime(now: LocalDateTime, choice: TimeFormatChoice, context: android.content.Context): String {
     val use24 = when (choice) {
         TimeFormatChoice.H24 -> true
         TimeFormatChoice.H12 -> false
         TimeFormatChoice.SYSTEM -> android.text.format.DateFormat.is24HourFormat(context)
     }
-    return now.format(DateTimeFormatter.ofPattern(if (use24) "HH:mm" else "h:mm", Locale.GERMAN))
+    return now.format(DateTimeFormatter.ofPattern(if (use24) "HH:mm" else "h:mm a", Locale.GERMAN))
 }
 
 fun formatDate(now: LocalDateTime, choice: DateFormatChoice): String = when (choice) {

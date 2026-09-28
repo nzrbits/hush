@@ -85,9 +85,13 @@ class PermissionsChecker @Inject constructor(
         PermissionState(HushPermission.POST_NOTIFICATIONS, canPostNotifications()),
     )
 
-    /** Intent that opens the right system screen for the permission. */
+    /**
+     * Intent that opens the right system screen for the permission. Start it with
+     * `startActivity` from any context. For DEFAULT_LAUNCHER use [defaultLauncherIntent]
+     * with an activity result launcher instead: the role dialog needs a calling package.
+     */
     fun settingsIntent(permission: HushPermission): Intent = when (permission) {
-        HushPermission.DEFAULT_LAUNCHER -> defaultLauncherIntent()
+        HushPermission.DEFAULT_LAUNCHER -> Intent(Settings.ACTION_HOME_SETTINGS)
         HushPermission.USAGE_ACCESS -> Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
         HushPermission.NOTIFICATION_ACCESS -> Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
         HushPermission.ACCESSIBILITY -> Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
@@ -95,6 +99,11 @@ class PermissionsChecker @Inject constructor(
             .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
     }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /**
+     * On Android 10+ the RoleManager dialog. It must be launched with an activity result
+     * launcher (startActivityForResult), otherwise PermissionController sees no calling
+     * package and closes at once. No NEW_TASK flag on purpose.
+     */
     fun defaultLauncherIntent(): Intent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val roleManager = context.getSystemService(RoleManager::class.java)

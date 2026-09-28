@@ -76,9 +76,15 @@ fun AppActionsSheet(
             HushRow(if (app.hidden) "Einblenden" else "Ausblenden", onClick = { viewModel.setHidden(app.key, !app.hidden); onDismiss() })
             HushRow("In Ordner verschieben", subtitle = folders.firstOrNull { it.id == app.folderId }?.name, onClick = { dialog = Dialog.Folder })
             HushRow("Zeiterinnerung", subtitle = "Tägliches Limit als Erinnerung", onClick = { navigation.onSetLimit(app.packageName); onDismiss() })
-            HushRow("App blockieren", subtitle = "1 Stunde bis 30 Tage", onClick = { navigation.onBlockApp(app.packageName); onDismiss() })
+            if (viewModel.isProtected(app.packageName)) {
+                HushRow("App blockieren", subtitle = "Nicht möglich: Telefon, Einstellungen, Wecker und System-Apps bleiben erreichbar", enabled = false)
+            } else {
+                HushRow("App blockieren", subtitle = "1 Stunde bis 30 Tage", onClick = { navigation.onBlockApp(app.packageName); onDismiss() })
+            }
             HushRow("App-Info", onClick = { viewModel.openAppInfo(app); onDismiss() })
-            HushRow("Deinstallieren", onClick = { dialog = Dialog.Uninstall })
+            if (!app.isSystemApp) {
+                HushRow("Deinstallieren", onClick = { dialog = Dialog.Uninstall })
+            }
         }
     }
 

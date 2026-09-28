@@ -24,6 +24,7 @@ dependencies {
     implementation(project(":feature:apps"))
     implementation(project(":feature:cozy"))
     implementation(project(":feature:wellbeing"))
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.navigation.compose)

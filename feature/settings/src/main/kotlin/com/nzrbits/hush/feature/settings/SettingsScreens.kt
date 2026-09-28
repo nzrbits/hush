@@ -63,11 +63,22 @@ data class SettingsNavigation(
     val faq: () -> Unit,
 )
 
+/**
+ * The RoleManager dialog only works through startActivityForResult, so every "make Hush the
+ * default launcher" entry point uses this launcher instead of a plain startActivity.
+ */
+@Composable
+fun rememberDefaultLauncherRequest(viewModel: SettingsViewModel): () -> Unit {
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { viewModel.refreshPermissions() }
+    return { runCatching { launcher.launch(viewModel.defaultLauncherIntent()) }.onFailure { viewModel.openPermission(HushPermission.DEFAULT_LAUNCHER) } }
+}
+
 /** Root settings screen. Mr. Nook talks at the top when the user allows it. */
 @Composable
 fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val colors = HushTheme.colors
+    val requestDefaultLauncher = rememberDefaultLauncherRequest(viewModel)
     HushScreen(title = "Einstellungen", onBack = nav.back) {
         if (settings.appearance.showMascotInSettings) {
             MascotBubble(text = Sayings.settings(LocalDateTime.now()), state = MascotState.TALK, mascotSize = 72.dp)
@@ -97,7 +108,7 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
 
         HushSectionHeader("Mehr")
         HushRow("Berechtigungen", onClick = nav.permissions)
-        HushRow("Standard-Launcher", subtitle = if (viewModel.isDefaultLauncher()) "${HushConfig.APP_NAME} ist Standard" else "Noch nicht Standard", onClick = { viewModel.openPermission(HushPermission.DEFAULT_LAUNCHER) })
+        HushRow("Standard-Launcher", subtitle = if (viewModel.isDefaultLauncher()) "${HushConfig.APP_NAME} ist Standard" else "Noch nicht Standard", onClick = requestDefaultLauncher)
         HushRow("Datenschutz", onClick = nav.privacy)
         HushRow("FAQ", onClick = nav.faq)
         HushRow("Über ${HushConfig.APP_NAME}", onClick = nav.about)
@@ -131,7 +142,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVi
 fun AppearanceScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val s by viewModel.settings.collectAsStateWithLifecycle()
     val colors = HushTheme.colors
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> viewModel.persistWallpaper(uri) }
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(viewModel::persistWallpaper) }
     HushScreen(title = "Darstellung", onBack = onBack) {
         HushSectionHeader("Modus")
         HushChoiceRow(ThemeMode.entries, s.appearance.themeMode, { if (it == ThemeMode.MINIMAL) "Minimal" else "Cozy" }) { v -> viewModel.updateAppearance { it.copy(themeMode = v) } }
@@ -153,7 +164,7 @@ fun AppearanceScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltView
             subtitle = if (s.appearance.wallpaperUri == null) "Standard ist die einfarbige Fläche des Modus" else "Eigenes Bild aktiv",
             onClick = { pickImage.launch(arrayOf("image/*")) },
         )
-        if (s.appearance.wallpaperUri != null) HushTextButton("Bild entfernen", onClick = { viewModel.persistWallpaper(null) }, danger = true)
+        if (s.appearance.wallpaperUri != null) HushTextButton("Bild entfernen", onClick = viewModel::clearWallpaper, danger = true)
         HushSectionHeader("Bewegung")
         HushSwitchRow("Animationen reduzieren", subtitle = "Stoppt Szenen und ${HushConfig.MASCOT_NAME}", checked = s.appearance.reduceMotion, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(reduceMotion = v) } })
     }
@@ -164,10 +175,10 @@ fun CozySettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVi
     val s by viewModel.settings.collectAsStateWithLifecycle()
     val colors = HushTheme.colors
     HushScreen(title = "Cozy", onBack = onBack) {
-        MascotBubble(text = "Ich bin auch im Minimal Mode still, versprochen.", state = MascotState.IDLE, mascotSize = 72.dp)
+        MascotBubble(text = "Auf dem Startbildschirm bin ich im Minimal Mode still.", state = MascotState.IDLE, mascotSize = 72.dp)
         HushSectionHeader(HushConfig.MASCOT_NAME)
         HushSwitchRow("Auf dem Startbildschirm", subtitle = "Nur im Cozy Mode sichtbar", checked = s.appearance.showMascot, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(showMascot = v) } })
-        HushSwitchRow("In den Einstellungen", checked = s.appearance.showMascotInSettings, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(showMascotInSettings = v) } })
+        HushSwitchRow("In den Einstellungen", subtitle = "In beiden Modi", checked = s.appearance.showMascotInSettings, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(showMascotInSettings = v) } })
         HushSectionHeader("Pixel-Szene")
         Text("Ein paar Pixel, die über den Startbildschirm ziehen. In beiden Modi, in Minimal einfarbig grau.", style = HushTheme.typography.caption, color = colors.muted)
         PixelScene.entries.forEach { scene ->
@@ -213,6 +224,7 @@ private fun GestureRow(title: String, current: GestureAction, options: List<Gest
 fun PermissionsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val states by viewModel.permissionStates.collectAsStateWithLifecycle()
     val colors = HushTheme.colors
+    val requestDefaultLauncher = rememberDefaultLauncherRequest(viewModel)
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.refreshPermissions() }
@@ -225,7 +237,7 @@ fun PermissionsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVie
         states.forEach { state ->
             val (why, without) = explain(state.permission)
             HushSpacer(12)
-            HushCard(onClick = { viewModel.openPermission(state.permission) }) {
+            HushCard(onClick = { if (state.permission == HushPermission.DEFAULT_LAUNCHER) requestDefaultLauncher() else viewModel.openPermission(state.permission) }) {
                 Column {
                     Text(state.permission.title + if (state.granted) " · erteilt" else " · fehlt", style = HushTheme.typography.body, color = colors.text)
                     Text(why, style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 4.dp))
@@ -296,8 +308,9 @@ fun FaqScreen(onBack: () -> Unit) {
 @Composable
 fun OnboardingScreen(onDone: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val colors = HushTheme.colors
+    val requestDefaultLauncher = rememberDefaultLauncherRequest(viewModel)
     HushScreen(title = "Hallo.") {
-        MascotBubble(text = "Ich bin ${HushConfig.MASCOT_NAME}. Ich rede nur im Cozy Mode.", state = MascotState.TALK)
+        MascotBubble(text = "Ich bin ${HushConfig.MASCOT_NAME}. Auf dem Startbildschirm rede ich nur im Cozy Mode.", state = MascotState.TALK)
         HushSpacer(16)
         Text("${HushConfig.APP_NAME} ist ein ruhiger Startbildschirm: Uhr, Datum, deine Apps als Text. Dazu Sperren, Zeitlimits und Benachrichtigungsfilter, wenn du sie willst.", style = HushTheme.typography.body, color = colors.text)
         HushSpacer(16)
@@ -306,7 +319,7 @@ fun OnboardingScreen(onDone: () -> Unit, viewModel: SettingsViewModel = hiltView
                 Text("1. Als Standard-Launcher setzen", style = HushTheme.typography.body, color = colors.text)
                 Text("Damit die Home-Taste hierher führt. Jederzeit umkehrbar.", style = HushTheme.typography.caption, color = colors.muted)
                 HushSpacer(8)
-                HushPrimaryButton(if (viewModel.isDefaultLauncher()) "Erledigt" else "Standard-Launcher wählen", onClick = { viewModel.openPermission(HushPermission.DEFAULT_LAUNCHER) })
+                HushPrimaryButton(if (viewModel.isDefaultLauncher()) "Erledigt" else "Standard-Launcher wählen", onClick = requestDefaultLauncher)
             }
         }
         HushSpacer(12)

@@ -2,9 +2,11 @@ package com.nzrbits.hush.core.datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -26,12 +28,18 @@ import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.common.model.WellbeingSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.hushPreferences: DataStore<Preferences> by preferencesDataStore(name = "${HushConfig.STORAGE_NAMESPACE}.settings")
+/** A corrupt or unreadable file falls back to defaults instead of crashing the home app in a loop. */
+private val Context.hushPreferences: DataStore<Preferences> by preferencesDataStore(
+    name = "${HushConfig.STORAGE_NAMESPACE}.settings",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+)
 
 /**
  * All user settings. Enum values are stored by name and fall back to defaults when unknown,
@@ -72,7 +80,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val onboardingDone = booleanPreferencesKey("onboardingDone")
     }
 
-    val settings: Flow<HushSettings> = context.hushPreferences.data.map { p -> p.toSettings() }
+    val settings: Flow<HushSettings> = context.hushPreferences.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { p -> p.toSettings() }
 
     suspend fun current(): HushSettings = settings.first()
 

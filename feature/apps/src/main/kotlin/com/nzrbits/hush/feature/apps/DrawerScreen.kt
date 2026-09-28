@@ -63,7 +63,7 @@ fun DrawerScreen(
     var selected by remember { mutableStateOf<LauncherApp?>(null) }
 
     LaunchedEffect(state.autoKeyboard) {
-        if (state.autoKeyboard) runCatching { focusRequester.requestFocus() }
+        if (state.autoKeyboard == true) runCatching { focusRequester.requestFocus() }
     }
 
     // Flattened items with stable index positions for the letter index.
@@ -116,7 +116,9 @@ fun DrawerScreen(
             },
         )
         Row(Modifier.fillMaxSize()) {
-            if (items.none { it is DrawerItem.App }) {
+            if (!state.loaded) {
+                // First list not in yet: show nothing rather than a wrong empty state.
+            } else if (items.none { it is DrawerItem.App }) {
                 HushEmptyState(
                     if (state.totalApps == 0) "Keine Apps gefunden. Läuft ${com.nzrbits.hush.core.common.HushConfig.APP_NAME} als Launcher?" else "Nichts gefunden.",
                     modifier = Modifier.padding(horizontal = 24.dp),
@@ -133,9 +135,15 @@ fun DrawerScreen(
                         when (item) {
                             is DrawerItem.Header -> item { HushSectionHeader(item.title) }
                             is DrawerItem.App -> item(key = item.app.key.id + item.app.activityClassName) {
+                                val blocked = item.app.packageName in state.blockedPackages
                                 HushAppItem(
                                     label = item.app.displayLabel,
-                                    secondary = if (item.app.isWorkProfile) "Arbeit" else null,
+                                    dimmed = blocked,
+                                    secondary = when {
+                                        blocked -> "gesperrt"
+                                        item.app.isWorkProfile -> "Arbeit"
+                                        else -> null
+                                    },
                                     onClick = { viewModel.launch(item.app); viewModel.clearQuery(); onClose() },
                                     onLongClick = { selected = item.app },
                                 )

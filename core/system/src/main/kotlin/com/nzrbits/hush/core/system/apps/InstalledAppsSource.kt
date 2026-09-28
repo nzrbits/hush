@@ -15,18 +15,22 @@ import com.nzrbits.hush.core.common.AppDispatchers
 import com.nzrbits.hush.core.common.model.AppKey
 import com.nzrbits.hush.core.common.model.InstalledApp
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Reads launchable apps from [LauncherApps] for every user profile (personal and work) and
- * emits a fresh list whenever a package is added, removed or changed.
+ * emits a fresh list whenever a package is added, removed or changed. The callback only
+ * signals; the actual (slow) reload runs on the IO dispatcher.
  */
 @Singleton
 class InstalledAppsSource @Inject constructor(
@@ -40,20 +44,25 @@ class InstalledAppsSource @Inject constructor(
     /** LauncherApps delivers callbacks on a Handler; registration itself needs a Looper thread. */
     private val callbackHandler = Handler(Looper.getMainLooper())
 
-    val apps: Flow<List<InstalledApp>> = callbackFlow {
-        trySend(load())
+    private val changes: Flow<Unit> = callbackFlow {
         val callback = object : LauncherApps.Callback() {
-            override fun onPackageRemoved(packageName: String?, user: UserHandle?) { trySend(load()) }
-            override fun onPackageAdded(packageName: String?, user: UserHandle?) { trySend(load()) }
-            override fun onPackageChanged(packageName: String?, user: UserHandle?) { trySend(load()) }
-            override fun onPackagesAvailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) { trySend(load()) }
-            override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) { trySend(load()) }
-            override fun onPackagesSuspended(packageNames: Array<out String>?, user: UserHandle?) { trySend(load()) }
-            override fun onPackagesUnsuspended(packageNames: Array<out String>?, user: UserHandle?) { trySend(load()) }
+            override fun onPackageRemoved(packageName: String?, user: UserHandle?) { trySend(Unit) }
+            override fun onPackageAdded(packageName: String?, user: UserHandle?) { trySend(Unit) }
+            override fun onPackageChanged(packageName: String?, user: UserHandle?) { trySend(Unit) }
+            override fun onPackagesAvailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) { trySend(Unit) }
+            override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) { trySend(Unit) }
+            override fun onPackagesSuspended(packageNames: Array<out String>?, user: UserHandle?) { trySend(Unit) }
+            override fun onPackagesUnsuspended(packageNames: Array<out String>?, user: UserHandle?) { trySend(Unit) }
         }
         launcherApps.registerCallback(callback, callbackHandler)
         awaitClose { launcherApps.unregisterCallback(callback) }
-    }.conflate().flowOn(dispatchers.io)
+    }.conflate()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val apps: Flow<List<InstalledApp>> = changes
+        .onStart { emit(Unit) }
+        .mapLatest { load() }
+        .flowOn(dispatchers.io)
 
     fun load(): List<InstalledApp> {
         val result = ArrayList<InstalledApp>()

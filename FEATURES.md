@@ -28,7 +28,7 @@ being installed.
 
 | Feature | Status | Notes |
 |---|---|---|
-| HOME intent, selectable as default launcher | Implemented and tested | RoleManager on Q+, system home settings before; verified with the system chooser |
+| HOME intent, selectable as default launcher | Implemented and tested | RoleManager dialog on Q+ via an activity result launcher (a plain startActivity closes the dialog at once), system home settings before; verified with the system chooser and the role dialog |
 | List all launchable apps incl. work profile | Implemented and tested | `LauncherApps` per `UserManager.userProfiles`; work profile flagged, not tested with a real work profile |
 | Launch apps | Implemented and tested | `startMainActivity`, fallback launch intent |
 | React to install / uninstall / label change | Implemented, not tested | `LauncherApps.Callback` on main looper; no package was installed during the emulator run |
@@ -46,7 +46,10 @@ being installed.
 |---|---|---|
 | Block app 1 h–30 d, slider, slide to confirm | Implemented and tested | Log-scale slider with snapping |
 | Block persists, survives restart | Implemented and tested | Absolute epoch end time |
-| Block enforced when opened elsewhere | Android limited, tested | Needs accessibility service; verified Chrome closed within 1 s of `am start`. Without the service the block is shown only inside Hush, and the UI says so |
+| Block enforced when opened elsewhere | Android limited, tested | Needs accessibility service; verified Chrome closed within 1 s of `am start`. Without the service the block is shown only inside Hush (home, drawer and context menu all refuse), and the UI says so |
+| Block takes effect while the app is already open | Implemented and tested | Service re-evaluates the foreground app on every block state change (minute ticker, new block, schedule start); verified with a schedule starting while Clock was open |
+| Protected apps cannot be blocked | Implemented and tested | Dialer, SMS, Settings, clock, installer, keyboards, system UI; see PERMISSIONS.md |
+| Blocked notice on home expires after 20 s | Implemented and tested | |
 | Screen time today / 7 days / per app / most used | Implemented and tested | Usage Access; DST-safe day boundaries |
 | Schedules: days, start / end, overnight, several apps, on / off, edit | Implemented and tested | Engine unit tested incl. overnight and DST; UI create + reopen verified |
 | Usage reminders 80 % / 100 % once per day | Implemented, logic tested | Decision unit tested; notification posting not verified end-to-end (needs real usage time) |
@@ -60,7 +63,7 @@ being installed.
 | Listener, rule evaluation, local log, cancel | Implemented and tested | Test notification captured, removed from the shade, listed with app, title, text, time |
 | Rules: block list / allow list, time window, weekdays, on / off | Implemented and tested | Filter unit tested incl. overnight window |
 | Delete one / delete all | Implemented and tested | |
-| Skips ongoing, foreground-service and group-summary notifications | Implemented, not tested | |
+| Skips ongoing, foreground-service, group-summary, media, call, alarm, navigation and protected-package notifications | Implemented, not tested | Cancel happens before the log entry, so nothing is logged that stayed in the shade |
 | Sound may already have played | Android limited | Stated on the log screen and in the FAQ |
 
 ## Cozy / design
@@ -72,7 +75,7 @@ being installed.
 | Mr. Nook with speech bubble on home and in settings | Implemented and tested | Sleep sprite while a schedule runs, talk in settings |
 | Sayings per daypart, stable per hour | Implemented and tested | |
 | Pixel scenes: leaves, snow, rain, fireflies, stars, petals; three densities | Implemented and tested (leaves) | Others share the same engine; 30 fps cap, paused when not resumed, off with reduced motion |
-| Font size (4), font (3), wallpaper, reduced motion | Implemented, not tested (wallpaper) | Wallpaper via `OpenDocument` with persisted URI permission |
+| Font size (4), font (3), wallpaper, reduced motion | Implemented, not tested (wallpaper) | Wallpaper via `OpenDocument` with persisted URI permission, decoded once on IO sampled to screen size, drawn under a 55 % scrim |
 
 ## Gestures and settings
 

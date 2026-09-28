@@ -1,6 +1,45 @@
 # Test results
 
-Date: 2026-09-28. Branch `initial-launcher`. Build `0.1.0-debug`.
+Date: 2026-09-28. Branch `main`. Build `0.1.1-debug`.
+
+## Review round (0.1.0 -> 0.1.1)
+
+Three independent read-only reviews (crash/lifecycle on real phones, system services and
+blocking logic, launcher UX) produced 29 findings. All were fixed except the two marked open.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | RoleManager default-launcher dialog closed at once on Android 10+ (started with `startActivity`, no calling package) | Activity result launcher in onboarding, settings and permissions; verified: dialog shows and sets Hush |
+| 2 | Onboarding and Minimal theme flashed on every cold start; NavHost rebuilt its graph when settings loaded | Settings are null until DataStore answered; start destination decided once; verified: home visible at 600 ms, no flash |
+| 3 | App list reloaded on the main thread on every package event | Callbacks only signal; reload on IO via `mapLatest` |
+| 4 | Wallpaper decoded full size on the main thread; large photos crash at draw | Decoded once on IO with `inSampleSize` to screen size, 55 % scrim |
+| 5 | Back on home finished the launcher on Android 8 to 11 | `BackHandler` on home |
+| 6 | Corrupt DataStore crashed the home app in a loop | `ReplaceFileCorruptionHandler` + IOException fallback |
+| 7 | `stateNotNeeded` dropped instance state | Removed |
+| 8 | Dialer, Settings, Clock, keyboards could be blocked (lock-out, killed calls) | `ProtectedPackages` denylist in repository, service, context menu and schedule picker; verified |
+| 9 | 1.5 s debounce skipped enforcement when a blocked app was reopened quickly | Always go home; only the notice is debounced; `@Volatile` fields |
+| 10 | Schedule starting while the app was open was never enforced | Service re-evaluates the foreground app on every block state change; verified with Gmail |
+| 11 | Short video walk ran unthrottled and concurrently on every content change | Settings cached in a StateFlow, 500 ms throttle, mutex, node reads guarded |
+| 12 | Media, call, alarm and system notifications could be cancelled; log before cancel | Category and media-session checks, protected packages skipped, cancel before capture |
+| 13 | Captured notification text went to cloud auto-backup | `allowBackup="false"` |
+| 14 | Unhandled exceptions in service coroutines killed the process | `CoroutineExceptionHandler` in both services |
+| 15 | Reminder marked as sent although the notification could not be shown | Mark only after a successful `notify` |
+| 16 | "Neu setzen" stacked blocks; "Aufheben" left the app blocked | Active blocks of the package are replaced |
+| 17 | Full-day usage scan per limited package every 15 min; non-Gboard keyboards counted as apps | One query per worker run; IME packages from `InputMethodManager` |
+| 18 | Drawer and context menu launched blocked apps; no "gesperrt" marker in the drawer | Same refuse-and-report path everywhere; marker added; verified |
+| 19 | Favourites overflowed off screen with many entries or large fonts | Favourites column scrolls only when it overflows |
+| 20 | Gesture hint had no way forward | Hint is tappable and opens the permissions screen |
+| 21 | Keyboard auto-open ignored the setting on first open | Setting is null until loaded |
+| 22 | Cancelling the wallpaper picker deleted the wallpaper | Null result is a no-op |
+| 23 | Blocked notice never expired | 20 s, cleared automatically; verified |
+| 24 | Weekday buttons in the schedule editor showed no selected state; start == end unexplained | Same ●/○ marker as the rule editor; "ganzer Tag" caption |
+| 25 | Copy said Mr. Nook only talks in Cozy Mode, but he talks in settings in both modes (as wanted) | Copy corrected |
+| 26 | 12 h clock had no AM/PM; charging line lagged a minute; FULL shown as "Lädt" | `h:mm a`; live battery flow; "Voll" |
+| 27 | "Deinstallieren" offered for system apps | Hidden for system apps |
+| 28 | Drawer showed "Keine Apps gefunden" for a moment on every open | Empty state gated on first load |
+| 29 | Facebook short video markers were a placeholder | Only a selected Reels tab counts |
+
+Open, not fixed: favourites reorder by drag (buttons only), English strings.
 
 ## Build
 
@@ -10,7 +49,7 @@ Date: 2026-09-28. Branch `initial-launcher`. Build `0.1.0-debug`.
 ./gradlew test                  -> BUILD SUCCESSFUL, 57 tests, 0 failures
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk` (12.9 MB)
+APK: `app/build/outputs/apk/debug/app-debug.apk` (about 13 MB)
 
 ## Unit tests (JVM, Robolectric for Room)
 
@@ -54,6 +93,13 @@ Driven with `adb input`, `uiautomator dump` and `logcat`. Screenshots in `docs/s
 | Gesture double tap locks screen | Pass | `HushBridge: global action 'lock' -> true`, `mWakefulness=Asleep` |
 | Schedule "Fokuszeit" Mo–Fr 09:00–12:00 with two apps, saved, reopened | Pass | `20-schedules.png` |
 | Accessibility state shown correctly in hub after fix | Pass | warning card gone |
+| 0.1.1: cold start shows the finished home screen at 600 ms, no onboarding or theme flash | Pass | `24-coldstart-600ms.png` |
+| 0.1.1: "Telefon" context menu shows "App blockieren" disabled with reason | Pass | dump |
+| 0.1.1: blocked Chrome shows "gesperrt" in the drawer; tap from drawer and from home is refused with notice | Pass | dump |
+| 0.1.1: blocked notice disappears after 20 s | Pass | dump count 0 after 22 s |
+| 0.1.1: schedule starting while Gmail is open closes Gmail within 8 s of the minute | Pass | `topResumedActivity` Hush at 22:51:08, schedule start 22:51:00 |
+| 0.1.1: RoleManager dialog "Set Hush as your default home app?" opens from settings and sets Hush | Pass | `25-role-dialog.png`, home = Hush afterwards |
+| 0.1.1: test notification still captured and removed | Pass | `dumpsys notification` count 0 |
 | No crash during the whole run | Pass | `logcat | grep -c "FATAL EXCEPTION"` = 0 after the fix |
 
 ## Bugs found and fixed during verification
@@ -66,6 +112,8 @@ Driven with `adb input`, `uiautomator dump` and `logcat`. Screenshots in `docs/s
 
 ## Not verified
 
+- Anything on a physical phone: OEM launchers (Samsung, Xiaomi), Android 8 to 14, real
+  keyboards, real notifications with sound.
 - Short video detection against the live YouTube / Instagram / Facebook / Snapchat apps
   (YouTube did not open on the emulator). Detector logic is unit tested.
 - Usage limit notification end to end (needs 15+ minutes of real usage). Decision logic

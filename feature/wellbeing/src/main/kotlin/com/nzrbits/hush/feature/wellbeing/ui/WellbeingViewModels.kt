@@ -79,6 +79,7 @@ class BlockAppViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val accessibilityOn: Boolean get() = permissions.isAccessibilityEnabled()
     val hasUsageAccess: Boolean get() = usage.hasUsageAccess()
+    val isProtected: Boolean get() = blocking.isProtected(packageName)
 
     init {
         viewModelScope.launch {
@@ -131,6 +132,8 @@ class ScheduleEditViewModel @Inject constructor(
     init {
         if (id != 0L) viewModelScope.launch { blocking.schedule(id)?.let { draft.value = it } }
     }
+
+    fun isProtected(packageName: String) = blocking.isProtected(packageName)
 
     fun update(transform: (BlockSchedule) -> BlockSchedule) { draft.value = transform(draft.value) }
 

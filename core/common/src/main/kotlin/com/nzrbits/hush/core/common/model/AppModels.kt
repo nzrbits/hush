@@ -45,6 +45,7 @@ data class LauncherApp(
     val favoriteOrder: Int?,
     val folderId: Long?,
     val isWorkProfile: Boolean,
+    val isSystemApp: Boolean,
     val activityClassName: String,
 ) {
     val displayLabel: String get() = customLabel?.takeIf { it.isNotBlank() } ?: originalLabel

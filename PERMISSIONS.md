@@ -60,6 +60,24 @@ time in the local Room database, kept for 30 days, and cancelled with `cancelNot
 Android limitation: the listener is called after the notification was posted, so a sound or
 vibration may already have played. The UI says so.
 
+## Protected packages
+
+Hush never blocks, schedules or filters these, whatever the user picks
+(`core/system/.../ProtectedPackages.kt`): Hush itself, `android`, system UI, Settings, the
+in-call and telecom packages, the default dialer, the default SMS app, the alarm clock app,
+the package installer and permission controller, and every installed keyboard. The context
+menu shows "App blockieren" greyed out with the reason, the schedule picker hides them, and
+the accessibility service ignores them even if a row slipped into the database.
+
+Why: blocking the dialer would throw an incoming call to the home screen, blocking Settings
+would remove the only way to switch the accessibility service off, blocking the clock would
+hide the alarm dismiss screen.
+
+## Backup
+
+`android:allowBackup="false"`. Captured notification text and the rest of the local
+database never go to a cloud backup.
+
 ## Device admin
 
 Not used. Screen lock goes through the accessibility global action instead, which needs no

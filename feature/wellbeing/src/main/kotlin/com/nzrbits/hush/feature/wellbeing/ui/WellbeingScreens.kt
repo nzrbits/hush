@@ -151,6 +151,14 @@ fun BlockAppScreen(
             )
         }
 
+        if (viewModel.isProtected) {
+            HushSectionHeader("Nicht sperrbar")
+            Text(
+                "Telefon, Einstellungen, Wecker, Tastaturen und System-Apps sperrt ${HushConfig.APP_NAME} nicht. Sonst kämst du an Anrufe, Wecker oder die Bedienungshilfe nicht mehr heran.",
+                style = HushTheme.typography.body, color = colors.muted,
+            )
+            return@HushScreen
+        }
         HushSectionHeader(if (active == null) "Blockieren für" else "Neu setzen")
         DurationSlider(
             minutes = minutes,

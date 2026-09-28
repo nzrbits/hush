@@ -50,6 +50,7 @@ class AppsRepository @Inject constructor(
                 favoriteOrder = c?.favoriteOrder,
                 folderId = c?.folderId,
                 isWorkProfile = app.isWorkProfile,
+                isSystemApp = app.isSystemApp,
                 activityClassName = app.activityClassName,
             )
         }.sortedWith { a, b -> collator.compare(a.displayLabel, b.displayLabel) }

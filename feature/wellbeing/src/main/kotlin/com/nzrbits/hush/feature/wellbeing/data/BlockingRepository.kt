@@ -10,6 +10,7 @@ import com.nzrbits.hush.core.database.AppBlockDao
 import com.nzrbits.hush.core.database.BlockScheduleDao
 import com.nzrbits.hush.core.database.toEntity
 import com.nzrbits.hush.core.database.toModel
+import com.nzrbits.hush.core.system.apps.ProtectedPackages
 import com.nzrbits.hush.feature.wellbeing.domain.BlockingEngine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,7 @@ data class BlockStatus(
 class BlockingRepository @Inject constructor(
     private val blockDao: AppBlockDao,
     private val scheduleDao: BlockScheduleDao,
+    private val protectedPackages: ProtectedPackages,
     private val clock: HushClock,
     private val dispatchers: AppDispatchers,
 ) {
@@ -76,13 +78,22 @@ class BlockingRepository @Inject constructor(
         BlockingEngine.reasonFor(packageName, now, blocks, schedules)
     }
 
-    suspend fun block(packageName: String, minutes: Long, note: String? = null): AppBlock = withContext(dispatchers.io) {
+    /**
+     * Blocks a package. Refuses protected packages (dialer, settings, keyboards, ...) and
+     * replaces any block that is still active for the same package, so "Neu setzen" never
+     * stacks rows and "Aufheben" always frees the app.
+     */
+    suspend fun block(packageName: String, minutes: Long, note: String? = null): AppBlock? = withContext(dispatchers.io) {
+        if (protectedPackages.isProtected(packageName)) return@withContext null
         val clamped = minutes.coerceIn(HushConfig.MIN_BLOCK_MINUTES, HushConfig.MAX_BLOCK_MINUTES)
         val start = clock.now().toEpochMilli()
+        blockDao.activeAt(start).filter { it.packageName == packageName }.forEach { blockDao.delete(it.id) }
         val block = AppBlock(packageName = packageName, startedAtMillis = start, endsAtMillis = start + clamped * 60_000L, note = note)
         val id = blockDao.insert(block.toEntity())
         block.copy(id = id)
     }
+
+    fun isProtected(packageName: String): Boolean = protectedPackages.isProtected(packageName)
 
     suspend fun unblock(id: Long) = withContext(dispatchers.io) { blockDao.delete(id) }
 
@@ -93,7 +104,8 @@ class BlockingRepository @Inject constructor(
     suspend fun schedule(id: Long): BlockSchedule? = withContext(dispatchers.io) { scheduleDao.get(id)?.toModel() }
 
     suspend fun saveSchedule(schedule: BlockSchedule): Long = withContext(dispatchers.io) {
-        val rowId = scheduleDao.upsert(schedule.toEntity())
+        val guarded = protectedPackages.all()
+        val rowId = scheduleDao.upsert(schedule.copy(packageNames = schedule.packageNames - guarded).toEntity())
         if (schedule.id != 0L) schedule.id else rowId
     }
 

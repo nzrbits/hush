@@ -39,10 +39,11 @@ Room app_customization ────────────────┴──
                                              └─ favorites    (home)
 
 Room app_blocks + block_schedules + minute ticker ──▶ BlockingRepository.status
-                                                     BlockingRepository.reasonFor(pkg)
+ProtectedPackages (dialer, settings, IME, ...) ────▶ BlockingRepository.reasonFor(pkg) / block()
                                                              ▲
-HushAccessibilityService (window state changed) ─────────────┘  ──▶ GLOBAL_ACTION_HOME + reportBlocked
-HomeViewModel.launch(app) ───────────────────────────────────┘  ──▶ refuse + reportBlocked
+HushAccessibilityService (window state changed,   ───────────┘  ──▶ GLOBAL_ACTION_HOME + reportBlocked
+                          and on every status change)
+Home / Drawer / context menu launch(app) ────────────────────┘  ──▶ refuse + reportBlocked
 
 UsageStatsManager events ──▶ UsageAggregator (pure) ──▶ UsageStatsSource.today()/lastDays()
                                                             │

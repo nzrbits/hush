@@ -21,6 +21,7 @@ android {
 dependencies {
     api(project(":core:designsystem"))
     api(project(":core:system"))
+    implementation(project(":feature:wellbeing"))
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.navigation.compose)

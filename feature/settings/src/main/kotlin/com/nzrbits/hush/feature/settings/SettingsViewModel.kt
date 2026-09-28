@@ -43,6 +43,7 @@ class SettingsViewModel @Inject constructor(
     fun updateWellbeing(t: (WellbeingSettings) -> WellbeingSettings) = viewModelScope.launch { repository.updateWellbeing(t) }
     fun setOnboardingDone() = viewModelScope.launch { repository.setOnboardingDone(true) }
 
+    /** For every permission except DEFAULT_LAUNCHER, which needs [defaultLauncherIntent] via an activity result launcher. */
     fun openPermission(permission: HushPermission) {
         runCatching { context.startActivity(permissions.settingsIntent(permission)) }
     }
@@ -53,12 +54,13 @@ class SettingsViewModel @Inject constructor(
     /** "Launcher verlassen": open the system home chooser so the user can pick another launcher. */
     fun leaveLauncher() { systemActions.openSystemHomeSettings() }
 
-    fun persistWallpaper(uri: android.net.Uri?) {
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+    /** Called only with a picked URI; cancelling the picker keeps the current wallpaper. */
+    fun persistWallpaper(uri: android.net.Uri) {
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        updateAppearance { it.copy(wallpaperUri = uri?.toString()) }
+        updateAppearance { it.copy(wallpaperUri = uri.toString()) }
     }
+
+    fun clearWallpaper() = updateAppearance { it.copy(wallpaperUri = null) }
 }

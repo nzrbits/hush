@@ -68,31 +68,37 @@ class UsageLimitRepository @Inject constructor(
      */
     suspend fun check(packageName: String) = withContext(dispatchers.io) {
         if (!settings.current().wellbeing.usageLimitRemindersEnabled) return@withContext
+        if (!usage.hasUsageAccess() || !notifications.canNotify()) return@withContext
         val entity = dao.get(packageName) ?: return@withContext
-        if (!usage.hasUsageAccess()) return@withContext
+        checkEntity(entity, usage.todayForPackage(packageName))
+    }
+
+    /** One usage query for all limits, used by the periodic worker. */
+    suspend fun checkAll() = withContext(dispatchers.io) {
+        if (!settings.current().wellbeing.usageLimitRemindersEnabled) return@withContext
+        if (!usage.hasUsageAccess() || !notifications.canNotify()) return@withContext
+        val all = dao.all()
+        if (all.isEmpty()) return@withContext
+        val today = usage.today()
+        all.forEach { entity ->
+            checkEntity(entity, today.perApp.firstOrNull { it.packageName == entity.packageName }?.foregroundMillis ?: 0L)
+        }
+    }
+
+    /** Marks the day only after the notification was actually posted, so a denied permission does not eat the reminder. */
+    private suspend fun checkEntity(entity: UsageLimitEntity, usedMillis: Long) {
         val today = clock.today().toEpochDay()
-        val usedMinutes = usage.todayForPackage(packageName) / 60_000
+        val usedMinutes = usedMillis / 60_000
         val outcome = LimitDecision.decide(
             usedMinutes, entity.toModel(),
             remindedToday = entity.lastReminderEpochDay == today,
             warnedToday = entity.lastWarningEpochDay == today,
         )
-        val tap = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        when (outcome) {
-            LimitDecision.Outcome.REMIND -> {
-                notifications.showLimitReminder(packageName, apps.labelFor(packageName), usedMinutes, entity.dailyLimitMinutes, warning = false, tapIntent = tap)
-                dao.markReminded(packageName, today)
-            }
-            LimitDecision.Outcome.WARN -> {
-                notifications.showLimitReminder(packageName, apps.labelFor(packageName), usedMinutes, entity.dailyLimitMinutes, warning = true, tapIntent = tap)
-                dao.markWarned(packageName, today)
-            }
-            LimitDecision.Outcome.NONE -> Unit
-        }
-    }
-
-    suspend fun checkAll() = withContext(dispatchers.io) {
-        dao.all().forEach { check(it.packageName) }
+        if (outcome == LimitDecision.Outcome.NONE) return
+        val tap = context.packageManager.getLaunchIntentForPackage(context.packageName)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val warning = outcome == LimitDecision.Outcome.WARN
+        val shown = notifications.showLimitReminder(entity.packageName, apps.labelFor(entity.packageName), usedMinutes, entity.dailyLimitMinutes, warning, tap)
+        if (!shown) return
+        if (warning) dao.markWarned(entity.packageName, today) else dao.markReminded(entity.packageName, today)
     }
 }

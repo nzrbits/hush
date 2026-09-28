@@ -30,7 +30,11 @@ class HushNotifications @Inject constructor(@ApplicationContext private val cont
         manager.createNotificationChannel(channel)
     }
 
-    fun showLimitReminder(packageName: String, appLabel: String, minutesUsed: Long, limitMinutes: Int, warning: Boolean, tapIntent: Intent?) {
+    fun canNotify(): Boolean = manager.areNotificationsEnabled()
+
+    /** Returns true only when the notification was handed to the system. */
+    fun showLimitReminder(packageName: String, appLabel: String, minutesUsed: Long, limitMinutes: Int, warning: Boolean, tapIntent: Intent?): Boolean {
+        if (!canNotify()) return false
         ensureChannels()
         val title = if (warning) "$appLabel: fast am Limit" else "$appLabel: Limit erreicht"
         val text = if (warning) {
@@ -50,6 +54,6 @@ class HushNotifications @Inject constructor(@ApplicationContext private val cont
             .setContentIntent(pending)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-        runCatching { manager.notify(ID_LIMIT_BASE + (packageName.hashCode() and 0xFFFF), notification) }
+        return runCatching { manager.notify(ID_LIMIT_BASE + (packageName.hashCode() and 0xFFFF), notification) }.isSuccess
     }
 }

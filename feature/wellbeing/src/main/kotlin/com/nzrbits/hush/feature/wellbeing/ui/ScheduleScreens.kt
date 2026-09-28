@@ -107,7 +107,7 @@ fun ScheduleEditScreen(onBack: () -> Unit, viewModel: ScheduleEditViewModel = hi
             DayOfWeek.entries.forEach { day ->
                 val on = day in draft.days
                 HushTextButton(
-                    text = day.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2),
+                    text = (if (on) "●" else "○") + day.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2),
                     onClick = { viewModel.update { it.copy(days = if (on) it.days - day else it.days + day) } },
                     modifier = Modifier.weight(1f),
                     danger = false,
@@ -115,6 +115,9 @@ fun ScheduleEditScreen(onBack: () -> Unit, viewModel: ScheduleEditViewModel = hi
             }
         }
         Text(draft.daysLabel(), style = HushTheme.typography.caption, color = colors.muted)
+        if (draft.startTime == draft.endTime) {
+            Text("Start und Ende sind gleich: der Plan gilt den ganzen Tag.", style = HushTheme.typography.caption, color = colors.muted)
+        }
         HushChoiceRow(
             options = listOf("Mo–Fr", "Wochenende", "Täglich"),
             selected = when (draft.daysLabel()) { "Montag bis Freitag" -> "Mo–Fr"; "Wochenende" -> "Wochenende"; "Täglich" -> "Täglich"; else -> "" },
@@ -169,7 +172,7 @@ fun ScheduleEditScreen(onBack: () -> Unit, viewModel: ScheduleEditViewModel = hi
 
     if (choosingApps) {
         AppMultiPickerDialog(
-            apps = apps.map { it.packageName to it.displayLabel }.distinctBy { it.first },
+            apps = apps.filter { !viewModel.isProtected(it.packageName) }.map { it.packageName to it.displayLabel }.distinctBy { it.first },
             selected = draft.packageNames,
             onToggle = { pkg, on -> viewModel.update { it.copy(packageNames = if (on) it.packageNames + pkg else it.packageNames - pkg) } },
             onDismiss = { choosingApps = false },
