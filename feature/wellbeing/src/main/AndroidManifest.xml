@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!--
+            Accessibility service. Used only for features the user switches on:
+            app blocking enforcement, short video blocking, and the lock screen / notification
+            shade gestures. It reads window state and, for short video blocking only, view ids
+            of four named apps. Nothing is stored or sent anywhere.
+        -->
+        <service
+            android:name=".service.HushAccessibilityService"
+            android:exported="false"
+            android:label="@string/hush_accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/hush_accessibility_config" />
+        </service>
+    </application>
+</manifest>

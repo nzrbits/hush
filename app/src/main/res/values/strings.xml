@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Product name. Keep in sync with HushConfig.APP_NAME. -->
+    <string name="app_name">Hush</string>
+</resources>

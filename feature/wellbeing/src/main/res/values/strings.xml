@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hush_accessibility_label">Hush: Fokus und Gesten</string>
+    <string name="hush_accessibility_description">Hush nutzt die Bedienungshilfe nur für drei Dinge, die du selbst einschaltest: 1) Gesperrte Apps schließen, wenn sie geöffnet werden. 2) Kurzvideo-Bereiche (YouTube Shorts, Instagram Reels, Facebook Reels, Snapchat Spotlight) erkennen und verlassen. 3) Bildschirm sperren und Benachrichtigungen öffnen per Geste. Hush liest dafür, welche App im Vordergrund ist, und bei Kurzvideo-Blockierung die Oberflächen-IDs dieser vier Apps. Es werden keine Inhalte gespeichert oder übertragen.</string>
+</resources>

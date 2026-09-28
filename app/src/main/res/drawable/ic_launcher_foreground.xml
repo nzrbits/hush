@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pixel "h": a quiet letter on the Cozy dark brown. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#FCF3E3" android:pathData="M36,30h8v48h-8z" />
+    <path android:fillColor="#FCF3E3" android:pathData="M44,46h8v8h-8z" />
+    <path android:fillColor="#FCF3E3" android:pathData="M52,42h12v8h-12z" />
+    <path android:fillColor="#FCF3E3" android:pathData="M64,46h8v32h-8z" />
+    <path android:fillColor="#CE6946" android:pathData="M36,78h8v4h-8z" />
+    <path android:fillColor="#CE6946" android:pathData="M64,78h8v4h-8z" />
+</vector>
