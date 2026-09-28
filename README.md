@@ -49,10 +49,11 @@ and no deep integration; that was decided on 2026-09-28.
 
 Version 0.1.2, debug build verified on an Android 15 emulator (Pixel 6 profile) after a
 three-lens code review (crash/lifecycle, services, UX) and two design reviews (Minimal,
-Cozy) against sourced criteria, see `TEST_RESULTS.md`. Not on the Play Store. Private
-repository. Not yet tested on a physical phone.
+Cozy) against sourced criteria, see `TEST_RESULTS.md`. Not on the Play Store. Not yet
+tested on a physical phone. Debug APKs are attached to the GitHub releases.
 
 ## Licences
 
 Nunito: SIL Open Font License 1.1, see `licenses/nunito-OFL.txt`. Mr. Nook artwork:
-© nzrbits, from the Mr. Nook project.
+© nzrbits, from the Mr. Nook project, not covered by any open licence. The Hush source
+code has no licence file yet, so all rights are reserved until one is added.
