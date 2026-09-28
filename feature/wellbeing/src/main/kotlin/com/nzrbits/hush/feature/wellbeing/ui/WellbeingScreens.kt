@@ -21,6 +21,7 @@ import com.nzrbits.hush.core.common.HushConfig
 import com.nzrbits.hush.core.common.time.Durations
 import com.nzrbits.hush.core.designsystem.components.DurationSlider
 import com.nzrbits.hush.core.designsystem.components.HushCard
+import com.nzrbits.hush.core.designsystem.components.HushDivider
 import com.nzrbits.hush.core.designsystem.components.HushEmptyState
 import com.nzrbits.hush.core.designsystem.components.HushPrimaryButton
 import com.nzrbits.hush.core.designsystem.components.HushRow
@@ -131,8 +132,11 @@ fun BlockAppScreen(
                     Text("Heute", style = HushTheme.typography.section, color = colors.muted)
                     Text(Durations.formatMillisShort(today ?: 0L), style = HushTheme.typography.title, color = colors.text)
                     if (week.isNotEmpty()) {
-                        HushSpacer(8)
-                        UsageBars(week.map { it }, colors.accent)
+                        // Bars only when there is something to show; an empty chart is decoration.
+                        if ((week.maxOrNull() ?: 0L) >= 60_000L) {
+                            HushSpacer(8)
+                            UsageBars(week, colors.accent)
+                        }
                         Text("Letzte 7 Tage · ${Durations.formatMillisShort(week.sum())}", style = HushTheme.typography.caption, color = colors.muted)
                     }
                 }
@@ -185,22 +189,31 @@ fun BlockAppScreen(
     }
 }
 
-/** Simple bar row, one bar per day, no axis. The numbers are in the text next to it. */
+/** Simple bar row, one bar per day, a 1 dp baseline, no axis. The numbers are in the text next to it. */
 @Composable
 fun UsageBars(values: List<Long>, color: androidx.compose.ui.graphics.Color, labels: List<String> = emptyList()) {
     val colors = HushTheme.colors
     val max = (values.maxOrNull() ?: 0L).coerceAtLeast(1L)
-    Row(Modifier.fillMaxWidth().height(72.dp), verticalAlignment = Alignment.Bottom) {
-        values.forEachIndexed { index, v ->
-            Column(Modifier.weight(1f).padding(horizontal = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height((56 * v.toFloat() / max).dp.coerceAtLeast(2.dp))
-                        .background(color),
-                )
-                if (labels.size == values.size) {
-                    Text(labels[index], style = HushTheme.typography.caption, color = colors.muted)
+    val radius = HushTheme.shapes.small.coerceAtMost(4.dp)
+    val barShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = radius, topEnd = radius)
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().height(60.dp), verticalAlignment = Alignment.Bottom) {
+            values.forEach { v ->
+                Box(Modifier.weight(1f).padding(horizontal = 3.dp), contentAlignment = Alignment.BottomCenter) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height((56 * v.toFloat() / max).dp.coerceAtLeast(3.dp))
+                            .background(color, barShape),
+                    )
+                }
+            }
+        }
+        HushDivider()
+        if (labels.size == values.size) {
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                labels.forEach { label ->
+                    Text(label, style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 }
             }
         }
@@ -229,8 +242,8 @@ fun ScreenTimeScreen(onBack: () -> Unit, onOpenPermissions: () -> Unit, viewMode
             return@HushScreen
         }
         val today = usage.today
-        Text(today?.let { Durations.formatMillisShort(it.totalMillis) } ?: "–", style = HushTheme.typography.clock, color = colors.text)
-        Text("heute", style = HushTheme.typography.caption, color = colors.muted)
+        Text(today?.let { Durations.formatMillisShort(it.totalMillis) } ?: "–", style = HushTheme.typography.hero, color = colors.text)
+        Text("heute", style = HushTheme.typography.body, color = colors.muted)
 
         if (usage.week.isNotEmpty()) {
             HushSectionHeader("Letzte 7 Tage")
@@ -271,15 +284,16 @@ fun ShortVideoScreen(onBack: () -> Unit, onOpenPermissions: () -> Unit, viewMode
             checked = wellbeing.shortVideoBlockingEnabled,
             onCheckedChange = viewModel::setEnabled,
         )
-        HushSectionHeader("Plattformen")
-        com.nzrbits.hush.core.common.model.ShortVideoPlatform.entries.forEach { platform ->
-            HushSwitchRow(
-                title = platform.displayName,
-                subtitle = platform.packageName,
-                checked = platform in wellbeing.shortVideoPlatforms,
-                enabled = wellbeing.shortVideoBlockingEnabled,
-                onCheckedChange = { viewModel.togglePlatform(platform, it) },
-            )
+        // Platform rows appear only once the feature is on (progressive disclosure).
+        if (wellbeing.shortVideoBlockingEnabled) {
+            HushSectionHeader("Plattformen")
+            com.nzrbits.hush.core.common.model.ShortVideoPlatform.entries.forEach { platform ->
+                HushSwitchRow(
+                    title = platform.displayName,
+                    checked = platform in wellbeing.shortVideoPlatforms,
+                    onCheckedChange = { viewModel.togglePlatform(platform, it) },
+                )
+            }
         }
         HushSectionHeader("So funktioniert es")
         Text(

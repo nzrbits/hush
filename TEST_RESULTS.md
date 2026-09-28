@@ -41,6 +41,46 @@ blocking logic, launcher UX) produced 29 findings. All were fixed except the two
 
 Open, not fixed: favourites reorder by drag (buttons only), English strings.
 
+## Design review round (0.1.1 -> 0.1.2)
+
+Two independent design reviews, one per mode, against sourced criteria (NN/g heuristic 8 and
+visual hierarchy, Material spacing and 48 dp targets, Android system bars and insets, WCAG
+1.4.3 and 1.4.11, NN/g dark mode, JUX 2025 rounded-aesthetic warmth, Velasco et al. 2015
+typeface roundness, colour-temperature research). Full screenshot sets in
+`docs/screenshots/review-minimal/` and `review-cozy/`; `v2-*` files show the result.
+
+Verdict on "cut off at top and bottom": no layout overlap. `statusBarsPadding` and
+`navigationBarsPadding` are applied on every screen; the emulator did not render status bar
+icons, so the inset read as an empty band. Later captures use SystemUI demo mode.
+
+Applied (30 findings, deduplicated):
+
+| Area | Change |
+|---|---|
+| Cozy typography | Nunito was never active: the font default was "System". New default "Wie Modus" resolves to Nunito in Cozy, system sans in Minimal |
+| Weekday toggles | "●M / o" wrapping replaced by seven 40 dp circles with 4 dp gap, accent fill when selected; the duplicate Mo–Fr / Wochenende / Täglich chips removed |
+| Slider | 24 dp disc thumb, visible inactive track, no stop indicator |
+| Component outlines | New `lineStrong` role (3:1) for text fields, unselected chips, switch borders and secondary buttons; `line` stays for dividers |
+| Switches | One `hushSwitchColors()` incl. disabled states; no Material grey leaks |
+| Material roles | secondaryContainer, tertiaryContainer, surfaceTint mapped to warm tokens (TimePicker) |
+| Minimal text | Running text #EDEDED, clock stays #FFFFFF (`emphasis`) |
+| Type scale | Line height 1.45; date and bubble 16 sp; home uses 64 / 22 / 16; screen-time hero 40 sp |
+| Left edge | 24 dp everywhere (screens, home, drawer, app rows) |
+| Home | Date and charging on one line ("· Lädt 80 %", "Voll" at 100 %); quick actions 48 dp tall, 24 dp apart; wellbeing link uses the same style; bottom padding 32 dp |
+| Package names | Never shown: context sheet shows "Eigentlich: <name>" only when renamed, platform rows lost their subtitles, missing apps read "<Name> (nicht installiert)" |
+| Primary buttons | "Neu" moved into the title row on schedules, limits and rules; white block only for terminal actions |
+| Block screen | 7-day bars only when a day has at least a minute; bars rounded (Cozy) with a baseline |
+| Short video | Platform rows appear only after the master switch is on |
+| Context sheet | Insets before padding, scrollable, 24 dp bottom clearance |
+| Scene | Light Cozy particles at 60 % alpha; densities 10 / 18 / 30 |
+| Mascot | 84 dp on home, 64 dp elsewhere, 12 dp above; tail drawn as a path without a seam |
+| Drawer | Letter index 44 dp wide |
+| Settings root | Same labels and subtitles as the wellbeing hub |
+
+Not applied, by decision: Mr. Nook stays in settings in Minimal Mode (wanted); the six
+wellbeing rows stay in the settings root (brief). Open: Cozy Light still shows a black
+frame for the first frames of a cold start because the window background is black.
+
 ## Build
 
 ```

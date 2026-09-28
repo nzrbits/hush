@@ -64,7 +64,7 @@ fun HushTextInputDialog(
                 focusedTextColor = colors.text,
                 unfocusedTextColor = colors.text,
                 focusedBorderColor = colors.accent,
-                unfocusedBorderColor = colors.line,
+                unfocusedBorderColor = colors.lineStrong,
                 cursorColor = colors.accent,
             ),
         )

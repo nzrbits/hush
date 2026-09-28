@@ -1,5 +1,6 @@
 package com.nzrbits.hush.feature.cozy
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,14 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 
 /**
  * Mr. Nook next to a speech bubble. Used on the Cozy home screen, on the blocked screen and
- * in settings. The bubble is a plain rounded box with a small square "tail" so it stays pixel-ish.
+ * in settings. Two sizes only: 84 dp on the home screen, 64 dp everywhere else.
  */
 @Composable
 fun MascotBubble(
@@ -40,19 +43,32 @@ fun MascotBubble(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NookMascot(state = state, size = mascotSize)
-        Box(modifier = Modifier.padding(start = 6.dp)) {
-            Box(
+        Box(modifier = Modifier.padding(start = 4.dp)) {
+            // Tail: a small triangle that overlaps the bubble by 1 dp; only its two outer edges are stroked.
+            Canvas(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 0.dp)
-                    .size(10.dp)
-                    .rotate(45f)
-                    .background(colors.bubble)
-                    .border(1.dp, colors.line),
-            )
+                    .size(width = 9.dp, height = 12.dp),
+            ) {
+                val w = size.width
+                val h = size.height
+                val path = Path().apply {
+                    moveTo(w + 2f, 0f)
+                    lineTo(0f, h / 2f)
+                    lineTo(w + 2f, h)
+                    close()
+                }
+                drawPath(path, colors.bubble)
+                val edge = Path().apply {
+                    moveTo(w + 2f, 0f)
+                    lineTo(0f, h / 2f)
+                    lineTo(w + 2f, h)
+                }
+                drawPath(edge, colors.line, style = Stroke(width = 1.dp.toPx()))
+            }
             Box(
                 modifier = Modifier
-                    .padding(start = 5.dp)
+                    .padding(start = 8.dp)
                     .clip(shape)
                     .background(colors.bubble)
                     .border(1.dp, colors.line, shape)
@@ -63,3 +79,5 @@ fun MascotBubble(
         }
     }
 }
+
+@Suppress("unused") private val keepOffset = Offset.Zero

@@ -103,7 +103,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             themeMode = enum(Keys.themeMode, ThemeMode.MINIMAL),
             cozyPalette = enum(Keys.cozyPalette, CozyPalette.AUTO),
             fontScale = enum(Keys.fontScale, FontScale.MEDIUM),
-            fontFamily = enum(Keys.fontFamily, FontFamilyChoice.SYSTEM),
+            fontFamily = enum(Keys.fontFamily, FontFamilyChoice.DEFAULT),
             wallpaperUri = this[Keys.wallpaper],
             showMascot = this[Keys.showMascot] ?: true,
             showMascotInSettings = this[Keys.showMascotSettings] ?: true,

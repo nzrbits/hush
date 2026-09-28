@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,7 +22,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 
-/** A plain settings row: title, optional subtitle, optional trailing text. */
+/** One switch look for the whole app, including the disabled states Material would grey out. */
+@Composable
+fun hushSwitchColors(): SwitchColors {
+    val c = HushTheme.colors
+    return SwitchDefaults.colors(
+        checkedThumbColor = c.accentText,
+        checkedTrackColor = c.accent,
+        uncheckedThumbColor = c.muted,
+        uncheckedTrackColor = c.surfaceVariant,
+        uncheckedBorderColor = c.lineStrong,
+        disabledCheckedThumbColor = c.accentText.copy(alpha = 0.6f),
+        disabledCheckedTrackColor = c.accent.copy(alpha = 0.38f),
+        disabledUncheckedThumbColor = c.muted.copy(alpha = 0.38f),
+        disabledUncheckedTrackColor = c.surfaceVariant,
+        disabledUncheckedBorderColor = c.line,
+    )
+}
+
+/** A plain settings row: title, optional subtitle, optional trailing text. Minimum 48 dp tall. */
 @Composable
 fun HushRow(
     title: String,
@@ -34,6 +54,7 @@ fun HushRow(
     val colors = HushTheme.colors
     val base = Modifier
         .fillMaxWidth()
+        .heightIn(min = 48.dp)
         .let {
             if (onClick != null || onLongClick != null) {
                 it.combinedClickable(enabled = enabled, onClick = { onClick?.invoke() }, onLongClick = onLongClick)
@@ -48,7 +69,7 @@ fun HushRow(
             }
         }
         if (trailing != null) {
-            Text(trailing, style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(start = 12.dp))
+            Text(trailing, style = HushTheme.typography.body, color = colors.text, modifier = Modifier.padding(start = 12.dp))
         }
         if (trailingContent != null) {
             Box(Modifier.padding(start = 12.dp)) { trailingContent() }
@@ -64,25 +85,13 @@ fun HushSwitchRow(
     subtitle: String? = null,
     enabled: Boolean = true,
 ) {
-    val colors = HushTheme.colors
     HushRow(
         title = title,
         subtitle = subtitle,
         enabled = enabled,
         onClick = { onCheckedChange(!checked) },
         trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                enabled = enabled,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = colors.accentText,
-                    checkedTrackColor = colors.accent,
-                    uncheckedThumbColor = colors.muted,
-                    uncheckedTrackColor = colors.surfaceVariant,
-                    uncheckedBorderColor = colors.line,
-                ),
-            )
+            Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled, colors = hushSwitchColors())
         },
     )
 }
@@ -120,8 +129,9 @@ fun HushAppItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(vertical = 10.dp, horizontal = 2.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -133,7 +143,7 @@ fun HushAppItem(
             modifier = Modifier.weight(1f, fill = false),
         )
         if (secondary != null) {
-            Text(secondary, style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(start = 12.dp))
+            Text(secondary, style = HushTheme.typography.body, color = colors.muted, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }

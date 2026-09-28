@@ -31,7 +31,9 @@ import com.nzrbits.hush.core.datastore.SettingsRepository
 import com.nzrbits.hush.core.designsystem.components.HushCard
 import com.nzrbits.hush.core.designsystem.components.HushChoiceRow
 import com.nzrbits.hush.core.designsystem.components.HushConfirmDialog
+import com.nzrbits.hush.core.designsystem.components.HushDayToggleRow
 import com.nzrbits.hush.core.designsystem.components.HushDialog
+import com.nzrbits.hush.core.designsystem.components.hushSwitchColors
 import com.nzrbits.hush.core.designsystem.components.HushEmptyState
 import com.nzrbits.hush.core.designsystem.components.HushPrimaryButton
 import com.nzrbits.hush.core.designsystem.components.HushRow
@@ -91,12 +93,13 @@ class NotificationRulesViewModel @Inject constructor(
 class NotificationRuleEditViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val repository: NotificationRepository,
-    appsRepository: AppsRepository,
+    private val appsRepository: AppsRepository,
 ) : ViewModel() {
     private val id: Long = savedState.get<String>("id")?.toLongOrNull() ?: 0L
     val isNew get() = id == 0L
     val apps: StateFlow<List<LauncherApp>> = appsRepository.visibleApps.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val draft = MutableStateFlow(NotificationRule(id = 0, name = "", enabled = true, mode = NotificationRuleMode.BLOCKLIST, packageNames = emptySet()))
+    fun labelFor(packageName: String) = appsRepository.labelFor(packageName)
 
     init { if (id != 0L) viewModelScope.launch { repository.rule(id)?.let { draft.value = it } } }
 
@@ -164,9 +167,7 @@ fun NotificationLogScreen(onBack: () -> Unit, onOpenRules: () -> Unit, onOpenPer
 fun NotificationRulesScreen(onBack: () -> Unit, onEdit: (Long) -> Unit, viewModel: NotificationRulesViewModel = hiltViewModel()) {
     val colors = HushTheme.colors
     val rules by viewModel.rules.collectAsStateWithLifecycle()
-    HushScreen(title = "Filterregeln", onBack = onBack) {
-        HushPrimaryButton("Neue Regel", onClick = { onEdit(0L) })
-        HushSpacer(8)
+    HushScreen(title = "Filterregeln", onBack = onBack, actions = { HushTextButton("Neu", onClick = { onEdit(0L) }) }) {
         if (rules.isEmpty()) HushEmptyState("Noch keine Regel. Beispiel: Nachts 22:00 bis 07:00 alles außer Telefon und Nachrichten.")
         rules.forEach { r ->
             val window = if (r.windowStart != null && r.windowEnd != null) "${r.windowStart!!.hm()}–${r.windowEnd!!.hm()}" else "immer"
@@ -176,10 +177,7 @@ fun NotificationRulesScreen(onBack: () -> Unit, onEdit: (Long) -> Unit, viewMode
                 subtitle = "$window · $mode: " + r.packageNames.joinToString(", ") { viewModel.labelFor(it) }.ifEmpty { "keine Apps" },
                 onClick = { onEdit(r.id) },
                 trailingContent = {
-                    androidx.compose.material3.Switch(
-                        checked = r.enabled, onCheckedChange = { viewModel.setEnabled(r.id, it) },
-                        colors = androidx.compose.material3.SwitchDefaults.colors(checkedTrackColor = colors.accent, checkedThumbColor = colors.accentText),
-                    )
+                    androidx.compose.material3.Switch(checked = r.enabled, onCheckedChange = { viewModel.setEnabled(r.id, it) }, colors = hushSwitchColors())
                 },
             )
         }
@@ -199,7 +197,7 @@ fun NotificationRuleEditScreen(onBack: () -> Unit, viewModel: NotificationRuleEd
         OutlinedTextField(
             value = draft.name, onValueChange = { v -> viewModel.update { it.copy(name = v) } },
             label = { Text("Name", color = colors.muted) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colors.text, unfocusedTextColor = colors.text, focusedBorderColor = colors.accent, unfocusedBorderColor = colors.line, cursorColor = colors.accent),
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colors.text, unfocusedTextColor = colors.text, focusedBorderColor = colors.accent, unfocusedBorderColor = colors.lineStrong, cursorColor = colors.accent),
         )
         HushSectionHeader("Modus")
         HushChoiceRow(
@@ -210,7 +208,7 @@ fun NotificationRuleEditScreen(onBack: () -> Unit, viewModel: NotificationRuleEd
         )
         HushSectionHeader("Apps")
         HushRow(
-            title = if (draft.packageNames.isEmpty()) "Apps wählen" else draft.packageNames.joinToString(", ") { pkg -> apps.firstOrNull { it.packageName == pkg }?.displayLabel ?: pkg },
+            title = if (draft.packageNames.isEmpty()) "Apps wählen" else draft.packageNames.joinToString(", ") { pkg -> apps.firstOrNull { it.packageName == pkg }?.displayLabel ?: viewModel.labelFor(pkg) },
             subtitle = "${draft.packageNames.size} gewählt",
             onClick = { choosing = true },
         )
@@ -225,16 +223,7 @@ fun NotificationRuleEditScreen(onBack: () -> Unit, viewModel: NotificationRuleEd
             HushRow("Bis", trailing = draft.windowEnd!!.hm() + if (!draft.windowEnd!!.isAfter(draft.windowStart!!)) " (nächster Tag)" else "", onClick = { picking = false })
         }
         HushSectionHeader("Wochentage")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            DayOfWeek.entries.forEach { day ->
-                val on = day in draft.days
-                HushTextButton(
-                    text = (if (on) "●" else "○") + day.getDisplayName(java.time.format.TextStyle.SHORT, Locale.GERMAN).take(2),
-                    onClick = { viewModel.update { it.copy(days = if (on) it.days - day else it.days + day) } },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+        HushDayToggleRow(selected = draft.days, onToggle = { day -> viewModel.update { it.copy(days = if (day in it.days) it.days - day else it.days + day) } })
         HushSpacer(24)
         HushPrimaryButton("Speichern", onClick = { viewModel.save(onBack) }, enabled = draft.days.isNotEmpty())
         if (!viewModel.isNew) {

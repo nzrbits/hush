@@ -47,8 +47,9 @@ and no deep integration; that was decided on 2026-09-28.
 
 ## Status
 
-Version 0.1.1, debug build verified on an Android 15 emulator (Pixel 6 profile) after a
-three-lens code review (crash/lifecycle, services, UX). Not on the Play Store. Private
+Version 0.1.2, debug build verified on an Android 15 emulator (Pixel 6 profile) after a
+three-lens code review (crash/lifecycle, services, UX) and two design reviews (Minimal,
+Cozy) against sourced criteria, see `TEST_RESULTS.md`. Not on the Play Store. Private
 repository. Not yet tested on a physical phone.
 
 ## Licences

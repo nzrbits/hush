@@ -36,7 +36,7 @@ fun HushScreen(
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScopeActions.() -> Unit = {},
     scrollable: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp),
     content: @Composable () -> Unit,
 ) {
     val colors = HushTheme.colors
@@ -51,7 +51,7 @@ fun HushScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = if (onBack != null) 4.dp else 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = if (onBack != null) 8.dp else 24.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
         ) {
             if (onBack != null) {
                 IconButton(onClick = onBack) {

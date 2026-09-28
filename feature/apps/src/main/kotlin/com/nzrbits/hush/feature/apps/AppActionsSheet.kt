@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -21,6 +23,7 @@ import com.nzrbits.hush.core.common.model.LauncherApp
 import com.nzrbits.hush.core.designsystem.components.HushConfirmDialog
 import com.nzrbits.hush.core.designsystem.components.HushDialog
 import com.nzrbits.hush.core.designsystem.components.HushRow
+import com.nzrbits.hush.core.designsystem.components.HushSpacer
 import com.nzrbits.hush.core.designsystem.components.HushTextInputDialog
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 
@@ -53,19 +56,25 @@ fun AppActionsSheet(
         contentColor = colors.text,
         dragHandle = null,
     ) {
+        // Insets first, then padding and scrolling, so the last row always clears the gesture pill.
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-                .navigationBarsPadding(),
+                .navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             Text(app.displayLabel, style = HushTheme.typography.title, color = colors.text)
-            Text(
-                if (app.customLabel != null) "${app.originalLabel} · ${app.packageName}" else app.packageName,
-                style = HushTheme.typography.caption,
-                color = colors.muted,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
+            if (app.customLabel != null) {
+                Text(
+                    "Eigentlich: ${app.originalLabel}",
+                    style = HushTheme.typography.caption,
+                    color = colors.muted,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            } else {
+                HushSpacer(8)
+            }
             HushRow("Öffnen", onClick = { viewModel.launch(app); onDismiss() })
             if (app.isFavorite) {
                 HushRow("Aus Favoriten entfernen", onClick = { viewModel.setFavorite(app.key, false); onDismiss() })

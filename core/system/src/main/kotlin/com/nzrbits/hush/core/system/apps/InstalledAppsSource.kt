@@ -121,8 +121,14 @@ class InstalledAppsSource @Inject constructor(
         runCatching { context.startActivity(intent) }
     }
 
+    /** Human label; for an app that is not installed, the last package segment plus a note instead of the raw package. */
     fun labelFor(packageName: String): String = runCatching {
         val pm = context.packageManager
         pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
-    }.getOrDefault(packageName)
+    }.getOrElse {
+        // com.instagram.android -> "Instagram", com.google.android.youtube -> "Youtube"
+        val generic = setOf("android", "app", "apps", "mobile", "client", "main")
+        val segment = packageName.split('.').lastOrNull { it.lowercase() !in generic } ?: packageName
+        "${segment.replaceFirstChar { it.uppercase() }} (nicht installiert)"
+    }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -43,7 +44,6 @@ import com.nzrbits.hush.core.common.model.ThemeMode
 import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.designsystem.components.HushAppItem
 import com.nzrbits.hush.core.designsystem.components.HushDivider
-import com.nzrbits.hush.core.designsystem.components.HushTextButton
 import com.nzrbits.hush.core.designsystem.scene.PixelSceneBackground
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 import com.nzrbits.hush.feature.apps.AppActionsNavigation
@@ -142,26 +142,26 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 28.dp, vertical = 24.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
         ) {
             Spacer(Modifier.height(24.dp))
             Text(
                 text = formatTime(now, settings.home.timeFormat, LocalContext.current),
                 style = HushTheme.typography.clock,
-                color = colors.text,
+                color = colors.emphasis,
             )
+            // Date and charging share one line at one size: three type sizes on this screen.
+            val chargingText = when {
+                !settings.home.showChargingAnimation || !charging.charging -> null
+                charging.full || charging.percent >= 100 -> "Voll"
+                else -> "Lädt ${charging.percent} %"
+            }
             Text(
-                text = formatDate(now, settings.home.dateFormat),
+                text = listOfNotNull(formatDate(now, settings.home.dateFormat), chargingText).joinToString(" · "),
                 style = HushTheme.typography.date,
                 color = colors.muted,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            if (settings.home.showChargingAnimation && charging.charging) {
-                Text(
-                    if (charging.full) "Voll · ${charging.percent} %" else "Lädt · ${charging.percent} %",
-                    style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 4.dp),
-                )
-            }
 
             if (cozy && settings.appearance.showMascot) {
                 Spacer(Modifier.height(20.dp))
@@ -219,16 +219,14 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             Spacer(Modifier.weight(1f))
 
             if (cozy) {
-                HushTextButton("Fokus & Bildschirmzeit", onClick = navigation.openWellbeing)
+                QuickAction("Fokus & Bildschirmzeit") { navigation.openWellbeing() }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     if (settings.home.showPhone) QuickAction("Telefon") { viewModel.openDialer() }
                     if (settings.home.showAlarm) QuickAction("Wecker") { viewModel.openAlarms() }
                 }
-                Row {
-                    if (settings.home.showCamera) QuickAction("Kamera") { viewModel.openCamera() }
-                }
+                if (settings.home.showCamera) QuickAction("Kamera") { viewModel.openCamera() }
             }
             hint?.let {
                 Text(
@@ -249,16 +247,21 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
     }
 }
 
+/** Bottom text action: 48 dp tall, same left edge as the app list, muted body text. */
 @Composable
 private fun QuickAction(label: String, onClick: () -> Unit) {
-    Text(
-        text = label,
-        style = HushTheme.typography.body.copy(fontWeight = FontWeight.Medium),
-        color = HushTheme.colors.muted,
+    Box(
         modifier = Modifier
-            .padding(end = 20.dp, top = 12.dp, bottom = 4.dp)
+            .heightIn(min = 48.dp)
             .pointerInput(Unit) { detectTapGestures(onTap = { onClick() }) },
-    )
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(
+            text = label,
+            style = HushTheme.typography.body.copy(fontWeight = FontWeight.Medium),
+            color = HushTheme.colors.muted,
+        )
+    }
 }
 
 fun formatTime(now: LocalDateTime, choice: TimeFormatChoice, context: android.content.Context): String {

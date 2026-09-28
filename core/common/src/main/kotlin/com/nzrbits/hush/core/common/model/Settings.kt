@@ -11,9 +11,11 @@ enum class FontScale(val factor: Float, val label: String) {
     EXTRA_LARGE(1.3f, "Extra groß"),
 }
 
+/** DEFAULT follows the mode: system sans in Minimal, Nunito in Cozy. */
 enum class FontFamilyChoice(val label: String) {
+    DEFAULT("Wie Modus"),
     SYSTEM("System"),
-    NUNITO("Nunito (Cozy)"),
+    NUNITO("Nunito"),
     MONO("Monospace"),
 }
 
@@ -33,9 +35,9 @@ enum class PixelScene(val label: String) {
 }
 
 enum class SceneDensity(val particles: Int, val label: String) {
-    SPARSE(14, "Wenig"),
-    NORMAL(26, "Normal"),
-    DENSE(44, "Viel"),
+    SPARSE(10, "Wenig"),
+    NORMAL(18, "Normal"),
+    DENSE(30, "Viel"),
 }
 
 enum class GestureAction(val label: String) {
@@ -68,7 +70,7 @@ data class AppearanceSettings(
     val themeMode: ThemeMode = ThemeMode.MINIMAL,
     val cozyPalette: CozyPalette = CozyPalette.AUTO,
     val fontScale: FontScale = FontScale.MEDIUM,
-    val fontFamily: FontFamilyChoice = FontFamilyChoice.SYSTEM,
+    val fontFamily: FontFamilyChoice = FontFamilyChoice.DEFAULT,
     val wallpaperUri: String? = null,
     val showMascot: Boolean = true,
     val showMascotInSettings: Boolean = true,

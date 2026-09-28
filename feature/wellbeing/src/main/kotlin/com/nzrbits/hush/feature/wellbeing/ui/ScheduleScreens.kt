@@ -26,8 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nzrbits.hush.core.common.model.BlockSchedule
-import com.nzrbits.hush.core.designsystem.components.HushChoiceRow
+import com.nzrbits.hush.core.designsystem.components.HushDayToggleRow
 import com.nzrbits.hush.core.designsystem.components.HushDialog
+import com.nzrbits.hush.core.designsystem.components.hushSwitchColors
 import com.nzrbits.hush.core.designsystem.components.HushEmptyState
 import com.nzrbits.hush.core.designsystem.components.HushPrimaryButton
 import com.nzrbits.hush.core.designsystem.components.HushRow
@@ -59,9 +60,7 @@ fun SchedulesScreen(onBack: () -> Unit, onEdit: (Long) -> Unit, viewModel: Sched
     val status by viewModel.status.collectAsStateWithLifecycle()
     val activeIds = status.scheduled.map { it.first.id }.toSet()
 
-    HushScreen(title = "Blockierpläne", onBack = onBack) {
-        HushPrimaryButton("Neuer Plan", onClick = { onEdit(0L) })
-        HushSpacer(8)
+    HushScreen(title = "Blockierpläne", onBack = onBack, actions = { HushTextButton("Neu", onClick = { onEdit(0L) }) }) {
         if (schedules.isEmpty()) HushEmptyState("Noch kein Plan. Zum Beispiel: Fokuszeit, Montag bis Freitag, 09:00 bis 12:00.")
         schedules.forEach { s ->
             HushRow(
@@ -73,7 +72,7 @@ fun SchedulesScreen(onBack: () -> Unit, onEdit: (Long) -> Unit, viewModel: Sched
                     androidx.compose.material3.Switch(
                         checked = s.enabled,
                         onCheckedChange = { viewModel.setEnabled(s.id, it) },
-                        colors = androidx.compose.material3.SwitchDefaults.colors(checkedTrackColor = colors.accent, checkedThumbColor = colors.accentText),
+                        colors = hushSwitchColors(),
                     )
                 },
             )
@@ -99,41 +98,15 @@ fun ScheduleEditScreen(onBack: () -> Unit, viewModel: ScheduleEditViewModel = hi
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = colors.text, unfocusedTextColor = colors.text,
-                focusedBorderColor = colors.accent, unfocusedBorderColor = colors.line, cursorColor = colors.accent,
+                focusedBorderColor = colors.accent, unfocusedBorderColor = colors.lineStrong, cursorColor = colors.accent,
             ),
         )
         HushSectionHeader("Wochentage")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            DayOfWeek.entries.forEach { day ->
-                val on = day in draft.days
-                HushTextButton(
-                    text = (if (on) "●" else "○") + day.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2),
-                    onClick = { viewModel.update { it.copy(days = if (on) it.days - day else it.days + day) } },
-                    modifier = Modifier.weight(1f),
-                    danger = false,
-                )
-            }
-        }
-        Text(draft.daysLabel(), style = HushTheme.typography.caption, color = colors.muted)
+        HushDayToggleRow(selected = draft.days, onToggle = { day -> viewModel.update { it.copy(days = if (day in it.days) it.days - day else it.days + day) } })
+        Text(draft.daysLabel(), style = HushTheme.typography.caption, color = colors.muted, modifier = Modifier.padding(top = 6.dp))
         if (draft.startTime == draft.endTime) {
             Text("Start und Ende sind gleich: der Plan gilt den ganzen Tag.", style = HushTheme.typography.caption, color = colors.muted)
         }
-        HushChoiceRow(
-            options = listOf("Mo–Fr", "Wochenende", "Täglich"),
-            selected = when (draft.daysLabel()) { "Montag bis Freitag" -> "Mo–Fr"; "Wochenende" -> "Wochenende"; "Täglich" -> "Täglich"; else -> "" },
-            label = { it },
-            onSelect = { choice ->
-                viewModel.update {
-                    it.copy(
-                        days = when (choice) {
-                            "Mo–Fr" -> setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
-                            "Wochenende" -> setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
-                            else -> DayOfWeek.entries.toSet()
-                        },
-                    )
-                }
-            },
-        )
 
         HushSectionHeader("Zeit")
         HushRow("Start", trailing = draft.startTime.hm(), onClick = { picking = true })
@@ -141,7 +114,7 @@ fun ScheduleEditScreen(onBack: () -> Unit, viewModel: ScheduleEditViewModel = hi
 
         HushSectionHeader("Apps")
         HushRow(
-            title = if (draft.packageNames.isEmpty()) "Apps wählen" else draft.packageNames.joinToString(", ") { pkg -> apps.firstOrNull { it.packageName == pkg }?.displayLabel ?: pkg },
+            title = if (draft.packageNames.isEmpty()) "Apps wählen" else draft.packageNames.joinToString(", ") { pkg -> apps.firstOrNull { it.packageName == pkg }?.displayLabel ?: viewModel.labelFor(pkg) },
             subtitle = "${draft.packageNames.size} gewählt",
             onClick = { choosingApps = true },
         )
@@ -193,7 +166,7 @@ fun AppMultiPickerDialog(
         OutlinedTextField(
             value = filter, onValueChange = { filter = it }, singleLine = true,
             placeholder = { Text("Filtern", color = colors.muted) }, modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colors.text, unfocusedTextColor = colors.text, focusedBorderColor = colors.accent, unfocusedBorderColor = colors.line),
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colors.text, unfocusedTextColor = colors.text, focusedBorderColor = colors.accent, unfocusedBorderColor = colors.lineStrong),
         )
         Column(
             Modifier

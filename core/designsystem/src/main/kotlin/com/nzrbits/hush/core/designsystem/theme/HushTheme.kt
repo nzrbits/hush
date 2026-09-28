@@ -51,7 +51,7 @@ fun HushTheme(
 ) {
     val colors = resolveColors(appearance, isSystemInDarkTheme())
     val minimal = colors.isMinimal
-    val family = fontFamilyFor(appearance.fontFamily)
+    val family = fontFamilyFor(appearance.fontFamily, minimal)
     val typography = hushTypography(family, appearance.fontScale.factor, minimal)
     val shapes = if (minimal) HushShapes(0.dp, 0.dp, 0.dp) else HushShapes(22.dp, 14.dp, 999.dp)
 
@@ -85,6 +85,11 @@ private fun HushColors.toMaterial(): ColorScheme {
         onPrimaryContainer = text,
         secondary = muted,
         onSecondary = background,
+        secondaryContainer = surfaceVariant,
+        onSecondaryContainer = text,
+        tertiaryContainer = accentSoft,
+        onTertiaryContainer = text,
+        surfaceTint = accent,
         background = background,
         onBackground = text,
         surface = surface,
@@ -96,7 +101,7 @@ private fun HushColors.toMaterial(): ColorScheme {
         surfaceContainerHighest = surfaceVariant,
         surfaceContainerLow = surface,
         surfaceContainerLowest = background,
-        outline = line,
+        outline = lineStrong,
         outlineVariant = line,
         error = danger,
         onError = background,

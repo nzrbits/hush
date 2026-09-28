@@ -12,10 +12,14 @@ import androidx.compose.ui.unit.sp
 import com.nzrbits.hush.core.common.model.FontFamilyChoice
 import com.nzrbits.hush.core.designsystem.R
 
-/** Hush text roles. Sizes are multiplied by the user's font scale. */
+/**
+ * Hush text roles. Sizes are multiplied by the user's font scale. A screen should use at most
+ * three of them at once: home = clock / listItem / body, secondary screens = title / body / caption.
+ */
 @Immutable
 data class HushTypography(
     val clock: TextStyle,
+    val hero: TextStyle,
     val date: TextStyle,
     val title: TextStyle,
     val section: TextStyle,
@@ -35,14 +39,17 @@ private val nunito: FontFamily = FontFamily(
     Font(R.font.nunito, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
 )
 
-fun fontFamilyFor(choice: FontFamilyChoice): FontFamily = when (choice) {
+/** DEFAULT follows the mode: rounded Nunito for Cozy, the system sans for Minimal. */
+fun fontFamilyFor(choice: FontFamilyChoice, minimal: Boolean): FontFamily = when (choice) {
+    FontFamilyChoice.DEFAULT -> if (minimal) FontFamily.SansSerif else nunito
     FontFamilyChoice.SYSTEM -> FontFamily.SansSerif
     FontFamilyChoice.NUNITO -> nunito
     FontFamilyChoice.MONO -> FontFamily.Monospace
 }
 
 fun hushTypography(family: FontFamily, scale: Float, minimal: Boolean): HushTypography {
-    fun style(size: Int, weight: FontWeight, lineHeight: Int = (size * 1.3f).toInt()) = TextStyle(
+    // Line height 1.45 keeps multi-line explanations readable at 13 to 16 sp.
+    fun style(size: Int, weight: FontWeight, lineHeight: Float = size * 1.45f) = TextStyle(
         fontFamily = family,
         fontSize = (size * scale).sp,
         fontWeight = weight,
@@ -50,14 +57,15 @@ fun hushTypography(family: FontFamily, scale: Float, minimal: Boolean): HushTypo
     )
     val clockWeight = if (minimal) FontWeight.Light else FontWeight.ExtraBold
     return HushTypography(
-        clock = style(64, clockWeight, 68),
-        date = style(17, FontWeight.Normal),
-        title = style(24, FontWeight.Bold),
+        clock = style(64, clockWeight, 68f),
+        hero = style(40, clockWeight, 44f),
+        date = style(16, FontWeight.Normal),
+        title = style(24, FontWeight.Bold, 30f),
         section = style(13, FontWeight.SemiBold),
-        listItem = style(22, if (minimal) FontWeight.Normal else FontWeight.SemiBold, 30),
+        listItem = style(22, if (minimal) FontWeight.Normal else FontWeight.SemiBold, 30f),
         body = style(16, FontWeight.Normal),
         caption = style(13, FontWeight.Normal),
-        bubble = style(15, FontWeight.SemiBold),
+        bubble = style(16, FontWeight.SemiBold),
     )
 }
 

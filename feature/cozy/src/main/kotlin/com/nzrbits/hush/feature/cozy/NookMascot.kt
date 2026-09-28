@@ -53,7 +53,7 @@ private fun sheetFor(state: MascotState): ImageBitmap = when (state) {
 fun NookMascot(
     state: MascotState,
     modifier: Modifier = Modifier,
-    size: Dp = 96.dp,
+    size: Dp = 84.dp,
 ) {
     val reduceMotion = HushTheme.reduceMotion
     val sheet = sheetFor(state)

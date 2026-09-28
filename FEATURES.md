@@ -75,7 +75,7 @@ being installed.
 | Mr. Nook with speech bubble on home and in settings | Implemented and tested | Sleep sprite while a schedule runs, talk in settings |
 | Sayings per daypart, stable per hour | Implemented and tested | |
 | Pixel scenes: leaves, snow, rain, fireflies, stars, petals; three densities | Implemented and tested (leaves) | Others share the same engine; 30 fps cap, paused when not resumed, off with reduced motion |
-| Font size (4), font (3), wallpaper, reduced motion | Implemented, not tested (wallpaper) | Wallpaper via `OpenDocument` with persisted URI permission, decoded once on IO sampled to screen size, drawn under a 55 % scrim |
+| Font size (4), font (4: wie Modus, System, Nunito, Mono), wallpaper, reduced motion | Implemented, not tested (wallpaper) | Wallpaper via `OpenDocument` with persisted URI permission, decoded once on IO sampled to screen size, drawn under a 55 % scrim |
 
 ## Gestures and settings
 

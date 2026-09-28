@@ -116,10 +116,11 @@ class SchedulesViewModel @Inject constructor(
 class ScheduleEditViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val blocking: BlockingRepository,
-    apps: AppsRepository,
+    private val appsRepository: AppsRepository,
 ) : ViewModel() {
     private val id: Long = savedState.get<String>("id")?.toLongOrNull() ?: 0L
-    val apps: StateFlow<List<LauncherApp>> = apps.visibleApps.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val apps: StateFlow<List<LauncherApp>> = appsRepository.visibleApps.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    fun labelFor(packageName: String) = appsRepository.labelFor(packageName)
     val draft = MutableStateFlow(
         BlockSchedule(
             id = 0, name = "", enabled = true,

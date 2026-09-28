@@ -41,7 +41,7 @@ fun LimitsScreen(onBack: () -> Unit, onOpenPermissions: () -> Unit, viewModel: L
 
     LaunchedEffect(viewModel.preselected) { viewModel.preselected?.let { editing = it } }
 
-    HushScreen(title = "Zeiterinnerungen", onBack = onBack) {
+    HushScreen(title = "Zeiterinnerungen", onBack = onBack, actions = { HushTextButton("Neu", onClick = { choosing = true }) }) {
         HushSwitchRow(
             title = "Erinnerungen senden",
             subtitle = "Eine Benachrichtigung bei 80 % und eine beim Erreichen des Limits. Keine Sperre.",
@@ -55,8 +55,6 @@ fun LimitsScreen(onBack: () -> Unit, onOpenPermissions: () -> Unit, viewModel: L
             }
         }
         HushSectionHeader("Limits")
-        HushPrimaryButton("App hinzufügen", onClick = { choosing = true })
-        HushSpacer(4)
         if (limits.isEmpty()) HushEmptyState("Noch keine Limits. Zum Beispiel Instagram: 15 Minuten.")
         limits.forEach { limit ->
             HushRow(

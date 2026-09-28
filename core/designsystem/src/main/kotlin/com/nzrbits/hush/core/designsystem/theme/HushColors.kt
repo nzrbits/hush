@@ -7,6 +7,11 @@ import androidx.compose.ui.graphics.Color
 /**
  * Hush colour roles. Both modes fill the same roles so screens never branch on the mode.
  * Cozy values are taken from the Mr. Nook / Melinda CSS tokens (cream, sand, sage, terracotta).
+ *
+ * [line] is for dividers and decorative borders (low contrast on purpose); [lineStrong] is for
+ * boundaries of interactive components (text fields, unselected chips, switch borders) and
+ * meets the 3:1 of WCAG 1.4.11. [emphasis] is the brightest text (clock) and may exceed the
+ * normal [text] contrast; running text uses [text].
  */
 @Immutable
 data class HushColors(
@@ -14,7 +19,9 @@ data class HushColors(
     val surface: Color,
     val surfaceVariant: Color,
     val line: Color,
+    val lineStrong: Color,
     val text: Color,
+    val emphasis: Color,
     val muted: Color,
     val accent: Color,
     val accentText: Color,
@@ -28,13 +35,15 @@ data class HushColors(
 )
 
 object HushPalettes {
-    /** Minimal Mode: black, white, one grey. Nothing else. */
+    /** Minimal Mode: black, white, one grey. Running text is #EDEDED to soften halation on OLED. */
     val Minimal = HushColors(
         background = Color(0xFF000000),
         surface = Color(0xFF0E0E0E),
         surfaceVariant = Color(0xFF1A1A1A),
         line = Color(0xFF2A2A2A),
-        text = Color(0xFFFFFFFF),
+        lineStrong = Color(0xFF5A5A5A),
+        text = Color(0xFFEDEDED),
+        emphasis = Color(0xFFFFFFFF),
         muted = Color(0xFF9A9A9A),
         accent = Color(0xFFFFFFFF),
         accentText = Color(0xFF000000),
@@ -42,7 +51,7 @@ object HushPalettes {
         danger = Color(0xFFE0E0E0),
         success = Color(0xFFCFCFCF),
         bubble = Color(0xFF161616),
-        bubbleText = Color(0xFFFFFFFF),
+        bubbleText = Color(0xFFEDEDED),
         isDark = true,
         isMinimal = true,
     )
@@ -53,7 +62,9 @@ object HushPalettes {
         surface = Color(0xFFFDF8EC),
         surfaceVariant = Color(0xFFF3E6CF),
         line = Color(0xFFE9DBC2),
+        lineStrong = Color(0xFF9C8467),
         text = Color(0xFF482D1E),
+        emphasis = Color(0xFF482D1E),
         muted = Color(0xFF7D6350),
         accent = Color(0xFF6B6E4A),
         accentText = Color(0xFFFDF8EC),
@@ -72,7 +83,9 @@ object HushPalettes {
         surface = Color(0xFF35271E),
         surfaceVariant = Color(0xFF443327),
         line = Color(0xFF503C2E),
+        lineStrong = Color(0xFF8C735C),
         text = Color(0xFFFCF3E3),
+        emphasis = Color(0xFFFCF3E3),
         muted = Color(0xFFC3AC94),
         accent = Color(0xFF9DA275),
         accentText = Color(0xFF2A1D15),

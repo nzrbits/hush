@@ -79,13 +79,15 @@ private fun palette(scene: PixelScene, colors: HushColors): List<Color> {
             else -> listOf(Color(0xFF5A5A5A), Color(0xFF444444), Color(0xFF777777))
         }
     }
+    // Light Cozy: particles at 60 % so they never compete with the clock or app names.
+    val soft = if (colors.isDark) 1f else 0.6f
     return when (scene) {
-        PixelScene.LEAVES -> listOf(HushPalettes.Terracotta, HushPalettes.Sand, HushPalettes.Brown, HushPalettes.Honey)
+        PixelScene.LEAVES -> listOf(HushPalettes.Terracotta, HushPalettes.Sand, HushPalettes.Brown, HushPalettes.Honey).map { it.copy(alpha = soft) }
         PixelScene.SNOW -> if (colors.isDark) listOf(Color(0xFFFCF3E3), Color(0xFFE9DBC2)) else listOf(Color(0xFFFFFFFF), Color(0xFFE9DBC2))
         PixelScene.RAIN -> listOf(HushPalettes.Sage.copy(alpha = 0.7f), colors.muted.copy(alpha = 0.5f))
         PixelScene.FIREFLIES -> listOf(HushPalettes.Honey, HushPalettes.Peach)
         PixelScene.STARS -> if (colors.isDark) listOf(Color(0xFFFCF3E3), HushPalettes.Honey) else listOf(HushPalettes.Sand, HushPalettes.Honey)
-        PixelScene.PETALS -> listOf(HushPalettes.Peach, Color(0xFFF7DED4), HushPalettes.Terracotta.copy(alpha = 0.8f))
+        PixelScene.PETALS -> listOf(HushPalettes.Peach, Color(0xFFF7DED4), HushPalettes.Terracotta.copy(alpha = 0.8f)).map { it.copy(alpha = it.alpha * soft) }
         PixelScene.NONE -> emptyList()
     }
 }

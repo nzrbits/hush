@@ -129,7 +129,7 @@ fun DrawerScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 24.dp, end = 8.dp, bottom = 48.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 24.dp, end = 4.dp, bottom = 48.dp),
                 ) {
                     items.forEach { item ->
                         when (item) {
@@ -181,7 +181,8 @@ private fun LetterIndex(letters: List<Char>, onLetter: (Char) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .width(28.dp)
+            .width(44.dp)
+            .padding(end = 4.dp)
             .onSizeChanged { height = it.height.coerceAtLeast(1) }
             .pointerInput(letters) {
                 detectVerticalDragGestures(

@@ -81,16 +81,17 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
     val requestDefaultLauncher = rememberDefaultLauncherRequest(viewModel)
     HushScreen(title = "Einstellungen", onBack = nav.back) {
         if (settings.appearance.showMascotInSettings) {
-            MascotBubble(text = Sayings.settings(LocalDateTime.now()), state = MascotState.TALK, mascotSize = 72.dp)
-            HushSpacer(8)
+            HushSpacer(12)
+            MascotBubble(text = Sayings.settings(LocalDateTime.now()), state = MascotState.TALK, mascotSize = 64.dp)
         }
+        // Same labels and subtitles as the wellbeing hub, so both lists read as one.
         HushSectionHeader("Digital Wellbeing")
-        HushRow("Zeiterinnerungen", subtitle = "Tägliche Limits pro App", onClick = nav.limits)
         HushRow("App-Blockierung", subtitle = "Aktive Sperren und Übersicht", onClick = nav.blocking)
         HushRow("Blockierpläne", subtitle = "Wiederkehrende Fokuszeiten", onClick = nav.schedules)
-        HushRow("Bildschirmzeit", onClick = nav.screenTime)
-        HushRow("Benachrichtigungsfilter", subtitle = "Regeln und Verlauf", onClick = nav.notificationRules)
-        HushRow("Kurzvideo-Blockierung", onClick = nav.shortVideo)
+        HushRow("Zeiterinnerungen", subtitle = "Tägliche Limits pro App, nur Erinnerung", onClick = nav.limits)
+        HushRow("Bildschirmzeit", subtitle = "Heute und die letzten sieben Tage", onClick = nav.screenTime)
+        HushRow("Kurzvideos", subtitle = "Shorts, Reels, Spotlight verlassen", onClick = nav.shortVideo)
+        HushRow("Benachrichtigungsfilter", subtitle = "Regeln und gefilterte Meldungen", onClick = nav.notificationLog)
 
         HushSectionHeader("Homescreen")
         HushRow("Favoriten", onClick = nav.favorites)
@@ -175,7 +176,8 @@ fun CozySettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVi
     val s by viewModel.settings.collectAsStateWithLifecycle()
     val colors = HushTheme.colors
     HushScreen(title = "Cozy", onBack = onBack) {
-        MascotBubble(text = "Auf dem Startbildschirm bin ich im Minimal Mode still.", state = MascotState.IDLE, mascotSize = 72.dp)
+        HushSpacer(12)
+        MascotBubble(text = "Auf dem Startbildschirm bin ich im Minimal Mode still.", state = MascotState.IDLE, mascotSize = 64.dp)
         HushSectionHeader(HushConfig.MASCOT_NAME)
         HushSwitchRow("Auf dem Startbildschirm", subtitle = "Nur im Cozy Mode sichtbar", checked = s.appearance.showMascot, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(showMascot = v) } })
         HushSwitchRow("In den Einstellungen", subtitle = "In beiden Modi", checked = s.appearance.showMascotInSettings, onCheckedChange = { v -> viewModel.updateAppearance { it.copy(showMascotInSettings = v) } })
@@ -310,7 +312,8 @@ fun OnboardingScreen(onDone: () -> Unit, viewModel: SettingsViewModel = hiltView
     val colors = HushTheme.colors
     val requestDefaultLauncher = rememberDefaultLauncherRequest(viewModel)
     HushScreen(title = "Hallo.") {
-        MascotBubble(text = "Ich bin ${HushConfig.MASCOT_NAME}. Auf dem Startbildschirm rede ich nur im Cozy Mode.", state = MascotState.TALK)
+        HushSpacer(12)
+        MascotBubble(text = "Ich bin ${HushConfig.MASCOT_NAME}. Auf dem Startbildschirm rede ich nur im Cozy Mode.", state = MascotState.TALK, mascotSize = 64.dp)
         HushSpacer(16)
         Text("${HushConfig.APP_NAME} ist ein ruhiger Startbildschirm: Uhr, Datum, deine Apps als Text. Dazu Sperren, Zeitlimits und Benachrichtigungsfilter, wenn du sie willst.", style = HushTheme.typography.body, color = colors.text)
         HushSpacer(16)
