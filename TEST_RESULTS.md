@@ -89,7 +89,10 @@ installieren" downloaded the asset in about two seconds and showed the system di
 "Do you want to update this app?", confirming installed 0.1.4, Android restarted Hush as the
 home app, and `installerPackageName` is now `com.nzrbits.hush.debug`. From here Android 12+
 should install further updates without the dialog (`USER_ACTION_NOT_REQUIRED`); that
-silent path is not yet verified because it needs the next release.
+silent path is not yet verified: for the 0.1.5 test the emulator build had been reinstalled
+with adb in between, which resets the installer of record, so the dialog showed again.
+Reproduce on the phone: install 0.1.5 through the in-app updater, then the 0.1.6 update
+should go through without a dialog.
 
 ## Second phone feedback (0.1.4 -> 0.1.5)
 
