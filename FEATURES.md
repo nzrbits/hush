@@ -89,6 +89,16 @@ being installed.
 | Default launcher management, leave launcher | Implemented and tested | |
 | Account | Open | No account system exists in Hush by design |
 
+## Updates
+
+| Feature | Status | Notes |
+|---|---|---|
+| Update check against GitHub releases, off by default | Implemented and tested | 6 h worker plus throttled check on start |
+| One-line notice on home, Mr. Nook says it in Cozy | Implemented and tested | |
+| Download and install via PackageInstaller session | Implemented and tested | System dialog on the first update; Hush becomes installer of record |
+| Silent install on Android 12+ afterwards | Implemented, not tested | Needs the next release to verify |
+| "Automatisch installieren" from the worker | Implemented, not tested | |
+
 ## Known gaps
 
 - Folder UI is functional but has no drag and drop; membership is set through the context menu.

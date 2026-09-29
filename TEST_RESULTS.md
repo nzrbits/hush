@@ -80,6 +80,17 @@ Applied (30 findings, deduplicated):
 Not applied, by decision: Mr. Nook stays in settings in Minimal Mode (wanted); the six
 wellbeing rows stay in the settings root (brief).
 
+## In-app updates (0.1.4)
+
+Verified on the emulator (started with `-dns-server 1.1.1.1,8.8.8.8`, the default emulator
+DNS did not resolve): 0.1.3 installed via adb, "Automatisch nach Updates suchen" switched on,
+"Jetzt prüfen" found 0.1.4 with release notes and size (13 MB), "Herunterladen und
+installieren" downloaded the asset in about two seconds and showed the system dialog
+"Do you want to update this app?", confirming installed 0.1.4, Android restarted Hush as the
+home app, and `installerPackageName` is now `com.nzrbits.hush.debug`. From here Android 12+
+should install further updates without the dialog (`USER_ACTION_NOT_REQUIRED`); that
+silent path is not yet verified because it needs the next release.
+
 ## First phone feedback (0.1.2 -> 0.1.3)
 
 Tested on Yannick's phone, installed as default launcher. Three points, all fixed:
