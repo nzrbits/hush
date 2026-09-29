@@ -154,13 +154,14 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
         ) {
             // The LED panel is the only thing at the top; tapping it opens the settings.
             val (digits, _) = formatTime(now, settings.home.timeFormat, LocalContext.current)
+            Spacer(Modifier.height(24.dp))
             LedMatrixClock(
                 digits = digits,
                 dayOfMonth = now.dayOfMonth,
                 modifier = Modifier.clickable(onClick = navigation.openSettings),
             )
             Spacer(Modifier.height(16.dp))
-            if (!cozy) HushDivider()
+            HushDivider()
 
             HomeUpdateLine(showMascot = cozy && settings.appearance.showMascot)
 
@@ -223,13 +224,17 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
             }
-            // Shortcuts in the corners; the awareness eye sits under the last (right) one.
+            // Bottom row: left shortcut, the awareness eye in the middle, right shortcut.
             val shortcuts by viewModel.shortcuts.collectAsStateWithLifecycle()
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                shortcuts.dropLast(1).forEach { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
-                Column(horizontalAlignment = Alignment.End) {
-                    shortcuts.lastOrNull()?.let { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
-                    PixelEyeButton(color = colors.muted, onClick = navigation.openWellbeing)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                val left = shortcuts.getOrNull(0)
+                val right = shortcuts.getOrNull(1)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    left?.let { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
+                }
+                PixelEyeButton(color = colors.muted, onClick = navigation.openWellbeing)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    right?.let { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
                 }
             }
             hint?.let {

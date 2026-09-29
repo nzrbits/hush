@@ -61,7 +61,8 @@ object Shortcuts {
     const val PHONE = "hush:phone"
     const val CAMERA = "hush:camera"
     const val ALARM = "hush:alarm"
-    const val SLOTS = 3
+    /** Two slots: left and right corner; the awareness eye takes the middle. */
+    const val SLOTS = 2
     val default: List<String> = listOf(PHONE, CAMERA)
     fun builtInLabel(token: String): String? = when (token) {
         PHONE -> "Telefon"
