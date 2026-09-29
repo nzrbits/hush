@@ -64,8 +64,8 @@ fun hushTypography(family: FontFamily, scale: Float, minimal: Boolean): HushTypo
     val clockWeight = if (minimal) FontWeight.Normal else FontWeight.Bold
     val heroWeight = if (minimal) FontWeight.Light else FontWeight.ExtraBold
     return HushTypography(
-        // The clock is always pixel. Digits only ("12:07"); AM/PM is drawn separately in a small style.
-        clock = TextStyle(fontFamily = pixel, fontSize = (72 * scale).sp, fontWeight = clockWeight, lineHeight = (76 * scale).sp),
+        // One digit per flip tile, so the size is per tile, not per line.
+        clock = TextStyle(fontFamily = pixel, fontSize = (44 * scale).sp, fontWeight = clockWeight, lineHeight = (48 * scale).sp),
         hero = style(40, heroWeight, 44f),
         date = style(16, FontWeight.Normal),
         title = style(24, FontWeight.Bold, 30f),

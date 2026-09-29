@@ -56,10 +56,23 @@ data class GestureSettings(
     val doubleTap: GestureAction = GestureAction.LOCK_SCREEN,
 )
 
+/** Bottom-left shortcut slots. A slot holds a package name or one of the built-in tokens. */
+object Shortcuts {
+    const val PHONE = "hush:phone"
+    const val CAMERA = "hush:camera"
+    const val ALARM = "hush:alarm"
+    const val SLOTS = 3
+    val default: List<String> = listOf(PHONE, CAMERA)
+    fun builtInLabel(token: String): String? = when (token) {
+        PHONE -> "Telefon"
+        CAMERA -> "Kamera"
+        ALARM -> "Wecker"
+        else -> null
+    }
+}
+
 data class HomeSettings(
-    val showPhone: Boolean = true,
-    val showCamera: Boolean = true,
-    val showAlarm: Boolean = false,
+    val shortcuts: List<String> = Shortcuts.default,
     val timeFormat: TimeFormatChoice = TimeFormatChoice.SYSTEM,
     val dateFormat: DateFormatChoice = DateFormatChoice.LONG,
     val showChargingAnimation: Boolean = true,

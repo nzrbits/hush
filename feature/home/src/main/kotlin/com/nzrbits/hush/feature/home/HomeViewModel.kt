@@ -46,6 +46,8 @@ import kotlin.math.max
 
 data class ChargingState(val charging: Boolean, val full: Boolean, val percent: Int)
 
+data class ResolvedShortcut(val token: String, val label: String, val app: LauncherApp?)
+
 /** What a gesture should do, resolved by the screen because some actions navigate. */
 sealed interface GestureResult {
     data object OpenDrawer : GestureResult
@@ -156,9 +158,25 @@ class HomeViewModel @Inject constructor(
 
     fun labelFor(packageName: String) = apps.labelFor(packageName)
 
-    fun openDialer() = systemActions.openDialer()
-    fun openCamera() = systemActions.openCamera()
-    fun openAlarms() = systemActions.openAlarms()
+    /** Resolved bottom-left shortcuts: built-in tokens get fixed labels, packages their app label. */
+    val shortcuts: StateFlow<List<ResolvedShortcut>> = combine(settings.settings, apps.allApps) { s, all ->
+        s.home.shortcuts.take(com.nzrbits.hush.core.common.model.Shortcuts.SLOTS).mapNotNull { token ->
+            val builtIn = com.nzrbits.hush.core.common.model.Shortcuts.builtInLabel(token)
+            when {
+                builtIn != null -> ResolvedShortcut(token, builtIn, null)
+                else -> all.firstOrNull { it.packageName == token }?.let { ResolvedShortcut(token, it.displayLabel, it) }
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun openShortcut(shortcut: ResolvedShortcut) {
+        when (shortcut.token) {
+            com.nzrbits.hush.core.common.model.Shortcuts.PHONE -> systemActions.openDialer()
+            com.nzrbits.hush.core.common.model.Shortcuts.CAMERA -> systemActions.openCamera()
+            com.nzrbits.hush.core.common.model.Shortcuts.ALARM -> systemActions.openAlarms()
+            else -> shortcut.app?.let { launch(it) }
+        }
+    }
 
     fun perform(action: GestureAction): GestureResult = performLogged(action).also { android.util.Log.i("HushHome", "gesture $action -> $it") }
 

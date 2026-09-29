@@ -8,9 +8,11 @@ import com.nzrbits.hush.core.common.model.AppearanceSettings
 import com.nzrbits.hush.core.common.model.GestureSettings
 import com.nzrbits.hush.core.common.model.HomeSettings
 import com.nzrbits.hush.core.common.model.HushSettings
+import com.nzrbits.hush.core.common.model.LauncherApp
 import com.nzrbits.hush.core.common.model.WellbeingSettings
 import com.nzrbits.hush.core.datastore.SettingsRepository
 import com.nzrbits.hush.core.system.actions.SystemActions
+import com.nzrbits.hush.core.system.apps.AppsRepository
 import com.nzrbits.hush.core.system.permissions.HushPermission
 import com.nzrbits.hush.core.system.permissions.PermissionState
 import com.nzrbits.hush.core.system.permissions.PermissionsChecker
@@ -29,8 +31,10 @@ class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val permissions: PermissionsChecker,
     private val systemActions: SystemActions,
+    appsRepository: AppsRepository,
 ) : ViewModel() {
     val settings: StateFlow<HushSettings> = repository.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HushSettings())
+    val apps: StateFlow<List<LauncherApp>> = appsRepository.visibleApps.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _permissions = MutableStateFlow(permissions.snapshot())
     val permissionStates: StateFlow<List<PermissionState>> = _permissions

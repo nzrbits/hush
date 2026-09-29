@@ -94,6 +94,15 @@ with adb in between, which resets the installer of record, so the dialog showed 
 Reproduce on the phone: install 0.1.5 through the in-app updater, then the 0.1.6 update
 should go through without a dialog.
 
+## Third phone feedback (0.1.5 -> 0.1.6)
+
+| Feedback | Fix |
+|---|---|
+| Clock should look like a retro LED matrix desk clock (reference photo) | `LedMatrixClock`: dark panel, 38x9 grid of square LEDs with gaps, unlit LEDs faint, 5x7 dot digits, pixel calendar icon with the day of month on the left. Colours: white on black in Minimal, honey on dark brown in Cozy |
+| Phone / camera bottom-left as shortcuts, any app allowed | Three shortcut slots (built-in phone, camera, alarm or any app), set in Einstellungen -> Uhr, Datum, Schnellzugriffe |
+| "Fokus & Bildschirmzeit" link not needed on home | Removed; Mr. Nook opens it, Minimal reaches it through settings or a gesture |
+| Settings as a retro gear top right | Pixel gear (13x13) above the clock panel, 48 dp target; the bottom "Einstellungen" text is gone |
+
 ## Second phone feedback (0.1.4 -> 0.1.5)
 
 | Feedback | Fix |

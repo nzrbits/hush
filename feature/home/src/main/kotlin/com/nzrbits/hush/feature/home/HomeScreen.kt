@@ -44,6 +44,8 @@ import com.nzrbits.hush.core.common.model.ThemeMode
 import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.designsystem.components.HushAppItem
 import com.nzrbits.hush.core.designsystem.components.HushDivider
+import com.nzrbits.hush.core.designsystem.components.LedMatrixClock
+import com.nzrbits.hush.core.designsystem.components.PixelGearButton
 import com.nzrbits.hush.core.designsystem.scene.PixelSceneBackground
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 import com.nzrbits.hush.feature.apps.AppActionsNavigation
@@ -147,28 +149,22 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
         ) {
             // Clock sits right under the status bar; AM/PM is a small suffix, not part of the pixel digits.
             val (digits, suffix) = formatTime(now, settings.home.timeFormat, LocalContext.current)
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(text = digits, style = HushTheme.typography.clock, color = colors.emphasis, maxLines = 1, softWrap = false)
-                if (suffix != null) {
-                    Text(
-                        text = suffix,
-                        style = HushTheme.typography.date,
-                        color = colors.muted,
-                        modifier = Modifier.padding(start = 10.dp, bottom = 14.dp),
-                    )
-                }
+            // LED matrix panel with the day in the calendar icon; the gear sits above it, top right.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                PixelGearButton(color = colors.muted, onClick = navigation.openSettings)
             }
-            // Date and charging share one line at one size: three type sizes on this screen.
+            LedMatrixClock(digits = digits, dayOfMonth = now.dayOfMonth)
+            // Date, AM/PM and charging share one line at one size.
             val chargingText = when {
                 !settings.home.showChargingAnimation || !charging.charging -> null
                 charging.full || charging.percent >= 100 -> "Voll"
                 else -> "Lädt ${charging.percent} %"
             }
             Text(
-                text = listOfNotNull(formatDate(now, settings.home.dateFormat), chargingText).joinToString(" · "),
+                text = listOfNotNull(formatDate(now, settings.home.dateFormat), suffix, chargingText).joinToString(" · "),
                 style = HushTheme.typography.date,
                 color = colors.muted,
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 12.dp),
             )
 
             if (cozy && settings.appearance.showMascot) {
@@ -228,19 +224,10 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
 
-            if (cozy) {
-                QuickAction("Fokus & Bildschirmzeit") { navigation.openWellbeing() }
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    if (settings.home.showPhone) QuickAction("Telefon") { viewModel.openDialer() }
-                    if (settings.home.showAlarm) QuickAction("Wecker") { viewModel.openAlarms() }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    if (settings.home.showCamera) QuickAction("Kamera") { viewModel.openCamera() }
-                    // Always visible: settings must be findable without knowing the long press.
-                    QuickAction("Einstellungen") { navigation.openSettings() }
-                }
+            // Bottom-left shortcuts: built-ins (phone, camera, alarm) or any app, set in settings.
+            val shortcuts by viewModel.shortcuts.collectAsStateWithLifecycle()
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
+                shortcuts.forEach { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
             }
             hint?.let {
                 Text(

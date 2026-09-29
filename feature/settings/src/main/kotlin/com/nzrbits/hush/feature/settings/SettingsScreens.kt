@@ -4,11 +4,17 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,10 +31,12 @@ import com.nzrbits.hush.core.common.model.FontScale
 import com.nzrbits.hush.core.common.model.GestureAction
 import com.nzrbits.hush.core.common.model.PixelScene
 import com.nzrbits.hush.core.common.model.SceneDensity
+import com.nzrbits.hush.core.common.model.Shortcuts
 import com.nzrbits.hush.core.common.model.ThemeMode
 import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.designsystem.components.HushCard
 import com.nzrbits.hush.core.designsystem.components.HushChoiceRow
+import com.nzrbits.hush.core.designsystem.components.HushDialog
 import com.nzrbits.hush.core.designsystem.components.HushPrimaryButton
 import com.nzrbits.hush.core.designsystem.components.HushRow
 import com.nzrbits.hush.core.designsystem.components.HushScreen
@@ -128,10 +136,39 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
 fun HomeSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val s by viewModel.settings.collectAsStateWithLifecycle()
     HushScreen(title = "Homescreen", onBack = onBack) {
-        HushSectionHeader("Schnellzugriffe")
-        HushSwitchRow("Telefon", checked = s.home.showPhone, onCheckedChange = { v -> viewModel.updateHome { it.copy(showPhone = v) } })
-        HushSwitchRow("Kamera", checked = s.home.showCamera, onCheckedChange = { v -> viewModel.updateHome { it.copy(showCamera = v) } })
-        HushSwitchRow("Wecker", checked = s.home.showAlarm, onCheckedChange = { v -> viewModel.updateHome { it.copy(showAlarm = v) } })
+        HushSectionHeader("Schnellzugriffe unten links")
+        val apps by viewModel.apps.collectAsStateWithLifecycle()
+        var pickingSlot by remember { mutableStateOf<Int?>(null) }
+        (0 until Shortcuts.SLOTS).forEach { slot ->
+            val token = s.home.shortcuts.getOrNull(slot)
+            val label = when {
+                token == null -> "Leer"
+                Shortcuts.builtInLabel(token) != null -> Shortcuts.builtInLabel(token)!!
+                else -> apps.firstOrNull { it.packageName == token }?.displayLabel ?: token
+            }
+            HushRow("Platz ${slot + 1}", trailing = label, onClick = { pickingSlot = slot })
+        }
+        pickingSlot?.let { slot ->
+            HushDialog(title = "Platz ${slot + 1}", onDismiss = { pickingSlot = null }) {
+                Column(Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    fun choose(token: String?) {
+                        viewModel.updateHome { h ->
+                            val list = h.shortcuts.toMutableList()
+                            while (list.size <= slot) list.add("")
+                            if (token == null) list[slot] = "" else list[slot] = token
+                            h.copy(shortcuts = list.filter { it.isNotBlank() }.distinct())
+                        }
+                        pickingSlot = null
+                    }
+                    HushRow("Leer", onClick = { choose(null) })
+                    HushRow("Telefon", onClick = { choose(Shortcuts.PHONE) })
+                    HushRow("Kamera", onClick = { choose(Shortcuts.CAMERA) })
+                    HushRow("Wecker", onClick = { choose(Shortcuts.ALARM) })
+                    HushSectionHeader("Apps")
+                    apps.forEach { app -> HushRow(app.displayLabel, onClick = { choose(app.packageName) }) }
+                }
+            }
+        }
         HushSectionHeader("Uhrzeit")
         HushChoiceRow(TimeFormatChoice.entries, s.home.timeFormat, { when (it) { TimeFormatChoice.SYSTEM -> "System"; TimeFormatChoice.H24 -> "24 h"; TimeFormatChoice.H12 -> "12 h" } }) { v -> viewModel.updateHome { it.copy(timeFormat = v) } }
         HushSectionHeader("Datum")

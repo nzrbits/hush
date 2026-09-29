@@ -24,6 +24,7 @@ import com.nzrbits.hush.core.common.model.HushSettings
 import com.nzrbits.hush.core.common.model.PixelScene
 import com.nzrbits.hush.core.common.model.SceneDensity
 import com.nzrbits.hush.core.common.model.ShortVideoPlatform
+import com.nzrbits.hush.core.common.model.Shortcuts
 import com.nzrbits.hush.core.common.model.ThemeMode
 import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.common.model.UpdateSettings
@@ -51,9 +52,7 @@ private val Context.hushPreferences: DataStore<Preferences> by preferencesDataSt
 class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
     private object Keys {
-        val showPhone = booleanPreferencesKey("home.showPhone")
-        val showCamera = booleanPreferencesKey("home.showCamera")
-        val showAlarm = booleanPreferencesKey("home.showAlarm")
+        val shortcuts = stringPreferencesKey("home.shortcuts")
         val timeFormat = stringPreferencesKey("home.timeFormat")
         val dateFormat = stringPreferencesKey("home.dateFormat")
         val charging = booleanPreferencesKey("home.chargingAnimation")
@@ -99,9 +98,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
 
     private fun Preferences.toSettings(): HushSettings = HushSettings(
         home = HomeSettings(
-            showPhone = this[Keys.showPhone] ?: true,
-            showCamera = this[Keys.showCamera] ?: true,
-            showAlarm = this[Keys.showAlarm] ?: false,
+            shortcuts = this[Keys.shortcuts]?.split('|')?.filter { it.isNotBlank() } ?: Shortcuts.default,
             timeFormat = enum(Keys.timeFormat, TimeFormatChoice.SYSTEM),
             dateFormat = enum(Keys.dateFormat, DateFormatChoice.LONG),
             showChargingAnimation = this[Keys.charging] ?: true,
@@ -156,9 +153,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun updateHome(transform: (HomeSettings) -> HomeSettings) {
         context.hushPreferences.edit { p ->
             val h = transform(p.toSettings().home)
-            p[Keys.showPhone] = h.showPhone
-            p[Keys.showCamera] = h.showCamera
-            p[Keys.showAlarm] = h.showAlarm
+            p[Keys.shortcuts] = h.shortcuts.joinToString("|")
             p[Keys.timeFormat] = h.timeFormat.name
             p[Keys.dateFormat] = h.dateFormat.name
             p[Keys.charging] = h.showChargingAnimation
