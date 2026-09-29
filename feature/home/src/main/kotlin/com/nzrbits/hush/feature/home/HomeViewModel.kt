@@ -20,6 +20,8 @@ import com.nzrbits.hush.core.datastore.SettingsRepository
 import com.nzrbits.hush.core.system.actions.AccessibilityBridge
 import com.nzrbits.hush.core.system.actions.SystemActions
 import com.nzrbits.hush.core.system.apps.AppsRepository
+import com.nzrbits.hush.core.system.calendar.CalendarSource
+import com.nzrbits.hush.core.system.calendar.NextEvent
 import com.nzrbits.hush.feature.wellbeing.data.BlockStatus
 import com.nzrbits.hush.feature.wellbeing.data.BlockedEvent
 import com.nzrbits.hush.feature.wellbeing.data.BlockingRepository
@@ -28,6 +30,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -47,6 +50,12 @@ import kotlin.math.max
 data class ChargingState(val charging: Boolean, val full: Boolean, val percent: Int)
 
 data class ResolvedShortcut(val token: String, val label: String, val app: LauncherApp?)
+
+sealed interface CalendarState {
+    data object NoPermission : CalendarState
+    data object Empty : CalendarState
+    data class Event(val event: NextEvent) : CalendarState
+}
 
 /** What a gesture should do, resolved by the screen because some actions navigate. */
 sealed interface GestureResult {
@@ -71,6 +80,7 @@ class HomeViewModel @Inject constructor(
     private val blockingRepository: BlockingRepository,
     private val dispatchers: AppDispatchers,
     private val usage: com.nzrbits.hush.core.system.usage.UsageStatsSource,
+    private val calendarSource: CalendarSource,
 ) : ViewModel() {
     val settings: StateFlow<HushSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HushSettings())
 
@@ -87,6 +97,20 @@ class HomeViewModel @Inject constructor(
             delay(60_000L - (ms % 60_000L) + 20)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), clock.nowLocal().toLocalDateTime())
+
+    private val calendarRefresh = MutableStateFlow(0)
+
+    /** Next Google-calendar event for Mr. Nook, refreshed every five minutes and on demand. */
+    val calendar: StateFlow<CalendarState> = combine(now.map { it.minute / 5 }.distinctUntilChanged(), calendarRefresh) { _, _ -> Unit }
+        .mapLatest {
+            if (!calendarSource.hasPermission()) CalendarState.NoPermission
+            else calendarSource.nextEvent()?.let { CalendarState.Event(it) } ?: CalendarState.Empty
+        }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), if (calendarSource.hasPermission()) CalendarState.Empty else CalendarState.NoPermission)
+
+    fun refreshCalendar() { calendarRefresh.value++ }
+    fun openEvent(event: NextEvent) = calendarSource.openEvent(event)
 
     /** Today's screen time for the mascot line, refreshed every five minutes. Null without usage access. */
     val screenTimeToday: StateFlow<String?> = now

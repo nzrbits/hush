@@ -39,6 +39,41 @@ private val GEAR = listOf(
     "......###......",
 )
 
+/** 15x9 pixel eye: awareness, the door to focus and screen time. */
+private val EYE = listOf(
+    ".....#####.....",
+    "...##.....##...",
+    "..#...###...#..",
+    ".#...#####...#.",
+    "#....#####....#",
+    ".#...#####...#.",
+    "..#...###...#..",
+    "...##.....##...",
+    ".....#####.....",
+)
+
+/** Awareness button: pixel eye, 48 dp target. */
+@Composable
+fun PixelEyeButton(color: Color, onClick: () -> Unit, modifier: Modifier = Modifier, glyph: Dp = 26.dp) {
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button; contentDescription = "Fokus & Bildschirmzeit" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(glyph, glyph * 9f / 15f)) {
+            val cols = 15
+            val cell = size.width / cols
+            EYE.forEachIndexed { y, row ->
+                row.forEachIndexed { x, c ->
+                    if (c == '#') drawRect(color, topLeft = Offset(x * cell, y * cell), size = Size(cell + 0.5f, cell + 0.5f))
+                }
+            }
+        }
+    }
+}
+
 /** Draws a pixel pattern at [size] with crisp cells. */
 @Composable
 fun PixelGlyph(rows: List<String>, color: Color, size: Dp, modifier: Modifier = Modifier) {

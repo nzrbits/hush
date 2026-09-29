@@ -94,6 +94,17 @@ with adb in between, which resets the installer of record, so the dialog showed 
 Reproduce on the phone: install 0.1.5 through the in-app updater, then the 0.1.6 update
 should go through without a dialog.
 
+## Fifth phone feedback (0.1.8 -> 0.1.9)
+
+| Feedback | Fix |
+|---|---|
+| Remove the date line, move the app list up | Date, AM/PM and charging line removed; the LED panel already shows the day |
+| Settings by tapping the clock, no gear | Panel is clickable, gear removed |
+| Awareness symbol under the camera linking to Fokus & Bildschirmzeit | Pixel eye (15x9) under the right shortcut, opens the wellbeing hub |
+| Mr. Nook reads the next event of the calendar app, Gmail only for now | `CalendarSource`: next instance of Google-account calendars within 7 days; runtime `READ_CALENDAR` asked when Mr. Nook is tapped; tap opens the event |
+
+Verified on the emulator with a seeded `com.google` calendar and an event "Zahnarzt" the next day at 09:00.
+
 ## Fourth phone feedback (0.1.6 -> 0.1.7)
 
 | Feedback | Fix |

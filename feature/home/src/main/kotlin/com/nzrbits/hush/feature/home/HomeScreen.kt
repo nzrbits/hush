@@ -45,8 +45,13 @@ import com.nzrbits.hush.core.common.model.TimeFormatChoice
 import com.nzrbits.hush.core.designsystem.components.HushAppItem
 import com.nzrbits.hush.core.designsystem.components.HushDivider
 import com.nzrbits.hush.core.designsystem.components.LedMatrixClock
-import com.nzrbits.hush.core.designsystem.components.PixelGearButton
+import com.nzrbits.hush.core.designsystem.components.PixelEyeButton
 import com.nzrbits.hush.core.designsystem.scene.PixelSceneBackground
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.nzrbits.hush.core.common.time.Durations
+import java.time.Instant
+import java.time.ZoneId
 import com.nzrbits.hush.core.designsystem.theme.HushTheme
 import com.nzrbits.hush.feature.apps.AppActionsNavigation
 import com.nzrbits.hush.feature.apps.AppActionsSheet
@@ -147,26 +152,14 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 .navigationBarsPadding()
                 .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
         ) {
-            // Clock sits right under the status bar; AM/PM is a small suffix, not part of the pixel digits.
-            val (digits, suffix) = formatTime(now, settings.home.timeFormat, LocalContext.current)
-            // LED matrix panel with the day in the calendar icon.
-            LedMatrixClock(digits = digits, dayOfMonth = now.dayOfMonth)
-            // Date, AM/PM and charging share one line at one size.
-            val chargingText = when {
-                !settings.home.showChargingAnimation || !charging.charging -> null
-                charging.full || charging.percent >= 100 -> "Voll"
-                else -> "Lädt ${charging.percent} %"
-            }
-            Text(
-                text = listOfNotNull(formatDate(now, settings.home.dateFormat), suffix, chargingText).joinToString(" · "),
-                style = HushTheme.typography.date,
-                color = colors.muted,
-                modifier = Modifier.padding(top = 12.dp),
+            // The LED panel is the only thing at the top; tapping it opens the settings.
+            val (digits, _) = formatTime(now, settings.home.timeFormat, LocalContext.current)
+            LedMatrixClock(
+                digits = digits,
+                dayOfMonth = now.dayOfMonth,
+                modifier = Modifier.clickable(onClick = navigation.openSettings),
             )
-            // Small pixel gear under the date, right side.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                PixelGearButton(color = colors.muted, onClick = navigation.openSettings)
-            }
+            Spacer(Modifier.height(16.dp))
             if (!cozy) HushDivider()
 
             HomeUpdateLine(showMascot = cozy && settings.appearance.showMascot)
@@ -213,21 +206,31 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
 
-            // Mr. Nook lives at the bottom, above the left shortcut.
+            // Mr. Nook lives at the bottom, above the left shortcut, and reads the next calendar event.
             if (cozy && settings.appearance.showMascot) {
-                val focusActive = blockStatus.scheduled.isNotEmpty()
-                val screenTime by viewModel.screenTimeToday.collectAsStateWithLifecycle()
+                val calendar by viewModel.calendar.collectAsStateWithLifecycle()
+                val askCalendar = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshCalendar() }
                 MascotBubble(
-                    text = if (focusActive) Sayings.focus(now) else Sayings.home(now, screenTime),
-                    state = if (focusActive) MascotState.SLEEP else MascotState.IDLE,
-                    onTap = navigation.openWellbeing,
+                    text = calendarLine(calendar, now),
+                    state = if (calendar is CalendarState.Event) MascotState.TALK else MascotState.IDLE,
+                    onTap = {
+                        when (val c = calendar) {
+                            CalendarState.NoPermission -> askCalendar.launch(android.Manifest.permission.READ_CALENDAR)
+                            is CalendarState.Event -> viewModel.openEvent(c.event)
+                            CalendarState.Empty -> viewModel.refreshCalendar()
+                        }
+                    },
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
             }
-            // Shortcuts in the corners: one left, one right, a third in the middle. Same size as the app list.
+            // Shortcuts in the corners; the awareness eye sits under the last (right) one.
             val shortcuts by viewModel.shortcuts.collectAsStateWithLifecycle()
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                shortcuts.forEach { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                shortcuts.dropLast(1).forEach { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
+                Column(horizontalAlignment = Alignment.End) {
+                    shortcuts.lastOrNull()?.let { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
+                    PixelEyeButton(color = colors.muted, onClick = navigation.openWellbeing)
+                }
             }
             hint?.let {
                 Text(
@@ -247,6 +250,24 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
         AppActionsSheet(app = app, navigation = navigation.appActions, onDismiss = { selected = null })
     }
 }
+
+/** What Mr. Nook says about the calendar. Short, one line where possible. */
+fun calendarLine(state: CalendarState, now: LocalDateTime): String = when (state) {
+    CalendarState.NoPermission -> "Ich lese dir deinen nächsten Termin vor. Tipp mich an."
+    CalendarState.Empty -> "Kein Termin in den nächsten sieben Tagen."
+    is CalendarState.Event -> {
+        val begin = Instant.ofEpochMilli(state.event.beginMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        val day = when (begin.toLocalDate()) {
+            now.toLocalDate() -> "heute"
+            now.toLocalDate().plusDays(1) -> "morgen"
+            else -> begin.format(DateTimeFormatter.ofPattern("EEEE", Locale.GERMAN))
+        }
+        val time = if (state.event.allDay) "ganztägig" else begin.format(DateTimeFormatter.ofPattern("HH:mm", Locale.GERMAN))
+        "Nächster Termin: ${state.event.title}, $day $time."
+    }
+}
+
+@Suppress("unused") private val keepDurations = Durations
 
 /** Shortcut in a bottom corner: same size and colour as the app list, 48 dp tall. */
 @Composable

@@ -17,6 +17,7 @@ leaves the device.
 | `POST_NOTIFICATIONS` (Android 13+) | Runtime prompt from the system app settings | Hush's own usage limit reminders | Limits are reached silently |
 | `RECEIVE_BOOT_COMPLETED` | Normal permission | Re-enqueue the periodic worker after reboot | Worker resumes on next app start |
 | `REQUEST_DELETE_PACKAGES` | Normal permission | "Deinstallieren" opens the system uninstall dialog | Only via system settings |
+| `READ_CALENDAR` | Runtime prompt when Mr. Nook is tapped | Mr. Nook reads the next event of Google-account calendars (title, start) on the home screen; opens it in the calendar app on tap | Mr. Nook only offers to ask for it |
 | `INTERNET` | Normal permission | Optional update check and APK download from GitHub releases, only while "Automatisch nach Updates suchen" is on | No update check; install releases by hand |
 | `REQUEST_INSTALL_PACKAGES` ("install unknown apps") | System settings, opened from the update line | Hand the downloaded APK to PackageInstaller | Update line opens the APK for manual install |
 | `QUERY_ALL_PACKAGES` | **not used** | | |
