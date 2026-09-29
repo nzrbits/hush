@@ -64,6 +64,8 @@ data class HomeSettings(
     val dateFormat: DateFormatChoice = DateFormatChoice.LONG,
     val showChargingAnimation: Boolean = true,
     val autoKeyboardInDrawer: Boolean = true,
+    /** Hide Android's navigation bar (3-button or gesture pill); a swipe from the bottom edge shows it briefly. */
+    val hideNavigationBar: Boolean = true,
 )
 
 data class AppearanceSettings(

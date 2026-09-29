@@ -91,6 +91,15 @@ home app, and `installerPackageName` is now `com.nzrbits.hush.debug`. From here 
 should install further updates without the dialog (`USER_ACTION_NOT_REQUIRED`); that
 silent path is not yet verified because it needs the next release.
 
+## Second phone feedback (0.1.4 -> 0.1.5)
+
+| Feedback | Fix |
+|---|---|
+| Pixel clock hard to read, the 8 blurs | Silkscreen (OFL) instead of Pixelify Sans: hard pixel grid, distinct digits; 72 sp, AM/PM as a small suffix |
+| Clock not aligned to the top, gaps top and bottom | Clock directly under the status bar (8 dp), quick actions at the very bottom (8 dp) |
+| Phone / camera / settings must be the bottom row | Bottom row is last; favourites take everything in between |
+| Android 3-button navigation bar visible | New setting "Android-Navigationsleiste ausblenden", on by default: `WindowInsetsController.hide(navigationBars)` with transient bars by swipe. Verified on the emulator with the 3-button overlay |
+
 ## First phone feedback (0.1.2 -> 0.1.3)
 
 Tested on Yannick's phone, installed as default launcher. Three points, all fixed:

@@ -143,14 +143,21 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
         ) {
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = formatTime(now, settings.home.timeFormat, LocalContext.current),
-                style = HushTheme.typography.clock,
-                color = colors.emphasis,
-            )
+            // Clock sits right under the status bar; AM/PM is a small suffix, not part of the pixel digits.
+            val (digits, suffix) = formatTime(now, settings.home.timeFormat, LocalContext.current)
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(text = digits, style = HushTheme.typography.clock, color = colors.emphasis, maxLines = 1, softWrap = false)
+                if (suffix != null) {
+                    Text(
+                        text = suffix,
+                        style = HushTheme.typography.date,
+                        color = colors.muted,
+                        modifier = Modifier.padding(start = 10.dp, bottom = 14.dp),
+                    )
+                }
+            }
             // Date and charging share one line at one size: three type sizes on this screen.
             val chargingText = when {
                 !settings.home.showChargingAnimation || !charging.charging -> null
@@ -221,8 +228,6 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-
             if (cozy) {
                 QuickAction("Fokus & Bildschirmzeit") { navigation.openWellbeing() }
             }
@@ -273,13 +278,18 @@ private fun QuickAction(label: String, onClick: () -> Unit) {
     }
 }
 
-fun formatTime(now: LocalDateTime, choice: TimeFormatChoice, context: android.content.Context): String {
+/** Digits and an optional AM/PM suffix, kept apart so the pixel clock stays compact. */
+fun formatTime(now: LocalDateTime, choice: TimeFormatChoice, context: android.content.Context): Pair<String, String?> {
     val use24 = when (choice) {
         TimeFormatChoice.H24 -> true
         TimeFormatChoice.H12 -> false
         TimeFormatChoice.SYSTEM -> android.text.format.DateFormat.is24HourFormat(context)
     }
-    return now.format(DateTimeFormatter.ofPattern(if (use24) "HH:mm" else "h:mm a", Locale.GERMAN))
+    return if (use24) {
+        now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.GERMAN)) to null
+    } else {
+        now.format(DateTimeFormatter.ofPattern("h:mm", Locale.GERMAN)) to now.format(DateTimeFormatter.ofPattern("a", Locale.ENGLISH))
+    }
 }
 
 fun formatDate(now: LocalDateTime, choice: DateFormatChoice): String = when (choice) {

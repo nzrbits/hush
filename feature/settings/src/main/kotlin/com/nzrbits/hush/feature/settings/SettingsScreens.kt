@@ -139,6 +139,12 @@ fun HomeSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVi
         HushSectionHeader("Weiteres")
         HushSwitchRow("Ladeanzeige", subtitle = "Zeigt „Lädt · 80 %“ unter dem Datum", checked = s.home.showChargingAnimation, onCheckedChange = { v -> viewModel.updateHome { it.copy(showChargingAnimation = v) } })
         HushSwitchRow("Tastatur automatisch öffnen", subtitle = "In der App-Suche", checked = s.home.autoKeyboardInDrawer, onCheckedChange = { v -> viewModel.updateHome { it.copy(autoKeyboardInDrawer = v) } })
+        HushSwitchRow(
+            "Android-Navigationsleiste ausblenden",
+            subtitle = "Dreieck, Kreis, Viereck verschwinden. Vom unteren Rand nach oben wischen zeigt sie kurz.",
+            checked = s.home.hideNavigationBar,
+            onCheckedChange = { v -> viewModel.updateHome { it.copy(hideNavigationBar = v) } },
+        )
     }
 }
 
@@ -269,7 +275,7 @@ fun AboutScreen(onBack: () -> Unit) {
         HushSpacer(12)
         Text("Version ${BuildInfo.versionName}", style = HushTheme.typography.caption, color = colors.muted)
         HushSpacer(12)
-        Text("${HushConfig.MASCOT_NAME} stammt aus der App Mr. Nook. Schriften Nunito und Pixelify Sans unter SIL Open Font License 1.1. Keine Analyse, keine Werbung, Netz nur für den optionalen Update-Abruf.", style = HushTheme.typography.caption, color = colors.muted)
+        Text("${HushConfig.MASCOT_NAME} stammt aus der App Mr. Nook. Schriften Nunito und Silkscreen unter SIL Open Font License 1.1. Keine Analyse, keine Werbung, Netz nur für den optionalen Update-Abruf.", style = HushTheme.typography.caption, color = colors.muted)
         HushSpacer(12)
         Text("Support: ${HushConfig.SUPPORT_EMAIL}", style = HushTheme.typography.caption, color = colors.muted)
     }

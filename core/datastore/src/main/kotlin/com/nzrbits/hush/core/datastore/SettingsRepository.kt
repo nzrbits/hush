@@ -58,6 +58,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val dateFormat = stringPreferencesKey("home.dateFormat")
         val charging = booleanPreferencesKey("home.chargingAnimation")
         val autoKeyboard = booleanPreferencesKey("home.autoKeyboard")
+        val hideNavBar = booleanPreferencesKey("home.hideNavigationBar")
 
         val themeMode = stringPreferencesKey("appearance.themeMode")
         val cozyPalette = stringPreferencesKey("appearance.cozyPalette")
@@ -105,6 +106,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             dateFormat = enum(Keys.dateFormat, DateFormatChoice.LONG),
             showChargingAnimation = this[Keys.charging] ?: true,
             autoKeyboardInDrawer = this[Keys.autoKeyboard] ?: true,
+            hideNavigationBar = this[Keys.hideNavBar] ?: true,
         ),
         appearance = AppearanceSettings(
             themeMode = enum(Keys.themeMode, ThemeMode.MINIMAL),
@@ -161,6 +163,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             p[Keys.dateFormat] = h.dateFormat.name
             p[Keys.charging] = h.showChargingAnimation
             p[Keys.autoKeyboard] = h.autoKeyboardInDrawer
+            p[Keys.hideNavBar] = h.hideNavigationBar
         }
     }
 
