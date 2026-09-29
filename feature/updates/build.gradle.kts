@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.nzrbits.hush.feature.home"
+    namespace = "com.nzrbits.hush.feature.updates"
     compileSdk = 35
     defaultConfig { minSdk = 26 }
     compileOptions {
@@ -20,17 +20,17 @@ android {
 
 dependencies {
     api(project(":core:designsystem"))
-    api(project(":core:system"))
-    implementation(project(":feature:apps"))
+    api(project(":core:datastore"))
     implementation(project(":feature:cozy"))
-    implementation(project(":feature:wellbeing"))
-    implementation(project(":feature:updates"))
-    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.truth)
 }

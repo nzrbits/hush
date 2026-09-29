@@ -5,7 +5,8 @@ blocks, recurring focus schedules, daily usage reminders, a notification filter 
 for Shorts and Reels. Two looks: **Minimal** (black, white, nothing else) and **Cozy** (cream,
 terracotta, sage, Nunito, and Mr. Nook the pixel robot who says one line per hour).
 
-Everything stays on the device. Hush has no internet permission.
+Everything stays on the device. The only network use is an optional update check against
+this repository's releases, off by default.
 
 ![Minimal home](docs/screenshots/09-blocked-notice.png) ![Cozy home](docs/screenshots/14-home-cozy-leaves.png)
 
@@ -30,7 +31,9 @@ Everything stays on the device. Hush has no internet permission.
   Heuristic on view ids, documented as such.
 - Gestures: swipe up, swipe down, double tap, each assignable. Lock screen and notification
   shade go through the accessibility service.
-- Appearance: Minimal / Cozy, Cozy light / dark / auto, four font sizes, three fonts,
+- Updates: optional check of GitHub releases every 6 h, one line on the home screen, install
+  through PackageInstaller (silent on Android 12+ once Hush is its own installer).
+- Appearance: Minimal / Cozy, Cozy light / dark / auto, four font sizes, four fonts,
   wallpaper, reduced motion, and pixel scenes (leaves, snow, rain, fireflies, stars, petals)
   with three densities.
 

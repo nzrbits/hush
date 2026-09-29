@@ -4,7 +4,9 @@ Hush asks for nothing at install time. Each special permission is requested from
 that needs it, with a card that says what is read, what it enables and what stops working
 without it. `Einstellungen > Berechtigungen` lists all of them with their current state.
 
-Hush has **no INTERNET permission**. Nothing leaves the device.
+Hush uses the network for exactly one thing: the optional update check against
+`https://api.github.com/repos/nzrbits/hush/releases/latest`, off by default. Nothing else
+leaves the device.
 
 | Permission | Where it is granted | Used for | Without it |
 |---|---|---|---|
@@ -15,6 +17,8 @@ Hush has **no INTERNET permission**. Nothing leaves the device.
 | `POST_NOTIFICATIONS` (Android 13+) | Runtime prompt from the system app settings | Hush's own usage limit reminders | Limits are reached silently |
 | `RECEIVE_BOOT_COMPLETED` | Normal permission | Re-enqueue the periodic worker after reboot | Worker resumes on next app start |
 | `REQUEST_DELETE_PACKAGES` | Normal permission | "Deinstallieren" opens the system uninstall dialog | Only via system settings |
+| `INTERNET` | Normal permission | Optional update check and APK download from GitHub releases, only while "Automatisch nach Updates suchen" is on | No update check; install releases by hand |
+| `REQUEST_INSTALL_PACKAGES` ("install unknown apps") | System settings, opened from the update line | Hand the downloaded APK to PackageInstaller | Update line opens the APK for manual install |
 | `QUERY_ALL_PACKAGES` | **not used** | | |
 
 Package visibility is declared with `<queries>` intent filters for `MAIN/LAUNCHER`, `MAIN/HOME`,
@@ -77,6 +81,16 @@ hide the alarm dismiss screen.
 
 `android:allowBackup="false"`. Captured notification text and the rest of the local
 database never go to a cloud backup.
+
+## In-app updates
+
+`feature/updates`. A WorkManager job every 6 hours (network required) and a throttled check
+on app start, both no-ops unless "Automatisch nach Updates suchen" is on. The APK is
+downloaded to the cache directory and committed through a `PackageInstaller` session with
+`USER_ACTION_NOT_REQUIRED`. Android 12+ then installs without a dialog when Hush is the
+installer of record of itself and the signing key matches; the first update after a manual
+install still shows the system dialog. `UpdateReceiver` handles `PENDING_USER_ACTION`,
+success and failure. "Automatisch installieren" lets the worker do the whole chain.
 
 ## Device admin
 

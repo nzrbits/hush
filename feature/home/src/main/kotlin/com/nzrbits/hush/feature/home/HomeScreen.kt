@@ -51,6 +51,7 @@ import com.nzrbits.hush.feature.apps.AppActionsSheet
 import com.nzrbits.hush.feature.cozy.MascotBubble
 import com.nzrbits.hush.feature.cozy.MascotState
 import com.nzrbits.hush.feature.cozy.Sayings
+import com.nzrbits.hush.feature.updates.HomeUpdateLine
 import com.nzrbits.hush.feature.wellbeing.ui.BlockedNotice
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -175,6 +176,8 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 Spacer(Modifier.height(20.dp))
                 HushDivider()
             }
+
+            HomeUpdateLine(showMascot = cozy && settings.appearance.showMascot)
 
             blockedEvent?.let { event ->
                 Spacer(Modifier.height(16.dp))

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -25,6 +26,7 @@ import com.nzrbits.hush.core.common.model.SceneDensity
 import com.nzrbits.hush.core.common.model.ShortVideoPlatform
 import com.nzrbits.hush.core.common.model.ThemeMode
 import com.nzrbits.hush.core.common.model.TimeFormatChoice
+import com.nzrbits.hush.core.common.model.UpdateSettings
 import com.nzrbits.hush.core.common.model.WellbeingSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -78,6 +80,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val limitReminders = booleanPreferencesKey("wellbeing.limitReminders")
 
         val onboardingDone = booleanPreferencesKey("onboardingDone")
+
+        val updAutoCheck = booleanPreferencesKey("updates.autoCheck")
+        val updAutoInstall = booleanPreferencesKey("updates.autoInstall")
+        val updLastCheck = longPreferencesKey("updates.lastCheckMillis")
+        val updSkipped = stringPreferencesKey("updates.skippedVersion")
     }
 
     val settings: Flow<HushSettings> = context.hushPreferences.data
@@ -124,8 +131,25 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             notificationFilterEnabled = this[Keys.notificationFilter] ?: false,
             usageLimitRemindersEnabled = this[Keys.limitReminders] ?: true,
         ),
+        updates = UpdateSettings(
+            autoCheck = this[Keys.updAutoCheck] ?: false,
+            autoInstall = this[Keys.updAutoInstall] ?: false,
+            lastCheckMillis = this[Keys.updLastCheck] ?: 0L,
+            skippedVersion = this[Keys.updSkipped],
+        ),
         onboardingDone = this[Keys.onboardingDone] ?: false,
     )
+
+    suspend fun updateUpdates(transform: (UpdateSettings) -> UpdateSettings) {
+        context.hushPreferences.edit { p ->
+            val u = transform(p.toSettings().updates)
+            p[Keys.updAutoCheck] = u.autoCheck
+            p[Keys.updAutoInstall] = u.autoInstall
+            p[Keys.updLastCheck] = u.lastCheckMillis
+            val skipped = u.skippedVersion
+            if (skipped == null) p.remove(Keys.updSkipped) else p[Keys.updSkipped] = skipped
+        }
+    }
 
     suspend fun updateHome(transform: (HomeSettings) -> HomeSettings) {
         context.hushPreferences.edit { p ->

@@ -30,6 +30,7 @@ object HushRoutes {
     const val SETTINGS_ABOUT = "settings/about"
     const val SETTINGS_PRIVACY = "settings/privacy"
     const val SETTINGS_FAQ = "settings/faq"
+    const val SETTINGS_UPDATES = "settings/updates"
 
     fun blockApp(packageName: String) = "wellbeing/block/$packageName"
     fun blocked(packageName: String) = "wellbeing/blocked/$packageName"

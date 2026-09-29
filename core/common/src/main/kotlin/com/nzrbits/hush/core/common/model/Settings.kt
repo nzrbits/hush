@@ -86,10 +86,23 @@ data class WellbeingSettings(
     val usageLimitRemindersEnabled: Boolean = true,
 )
 
+/**
+ * In-app updates from GitHub releases. Off by default: with [autoCheck] off the app never
+ * opens a network connection. [autoInstall] lets the background worker download and install
+ * silently once Android allows it (Hush is its own installer of record, same signature).
+ */
+data class UpdateSettings(
+    val autoCheck: Boolean = false,
+    val autoInstall: Boolean = false,
+    val lastCheckMillis: Long = 0L,
+    val skippedVersion: String? = null,
+)
+
 data class HushSettings(
     val home: HomeSettings = HomeSettings(),
     val appearance: AppearanceSettings = AppearanceSettings(),
     val gestures: GestureSettings = GestureSettings(),
     val wellbeing: WellbeingSettings = WellbeingSettings(),
+    val updates: UpdateSettings = UpdateSettings(),
     val onboardingDone: Boolean = false,
 )

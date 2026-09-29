@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.nzrbits.hush.core.common.BuildInfo
 import com.nzrbits.hush.core.common.HushConfig
 import com.nzrbits.hush.core.common.model.CozyPalette
 import com.nzrbits.hush.core.common.model.DateFormatChoice
@@ -61,6 +62,7 @@ data class SettingsNavigation(
     val about: () -> Unit,
     val privacy: () -> Unit,
     val faq: () -> Unit,
+    val updates: () -> Unit,
 )
 
 /**
@@ -112,6 +114,7 @@ fun SettingsScreen(nav: SettingsNavigation, viewModel: SettingsViewModel = hiltV
         HushRow("Standard-Launcher", subtitle = if (viewModel.isDefaultLauncher()) "${HushConfig.APP_NAME} ist Standard" else "Noch nicht Standard", onClick = requestDefaultLauncher)
         HushRow("Datenschutz", onClick = nav.privacy)
         HushRow("FAQ", onClick = nav.faq)
+        HushRow("Updates", subtitle = "Optionaler Abruf von GitHub, standardmäßig aus", onClick = nav.updates)
         HushRow("Über ${HushConfig.APP_NAME}", onClick = nav.about)
         HushRow("Launcher verlassen", subtitle = "Anderen Launcher als Standard wählen", onClick = viewModel::leaveLauncher)
         Text(
@@ -266,7 +269,7 @@ fun AboutScreen(onBack: () -> Unit) {
         HushSpacer(12)
         Text("Version ${BuildInfo.versionName}", style = HushTheme.typography.caption, color = colors.muted)
         HushSpacer(12)
-        Text("${HushConfig.MASCOT_NAME} stammt aus der App Mr. Nook. Schrift Nunito unter SIL Open Font License 1.1. Keine Analyse, keine Werbung, kein Netzwerkzugriff.", style = HushTheme.typography.caption, color = colors.muted)
+        Text("${HushConfig.MASCOT_NAME} stammt aus der App Mr. Nook. Schriften Nunito und Pixelify Sans unter SIL Open Font License 1.1. Keine Analyse, keine Werbung, Netz nur für den optionalen Update-Abruf.", style = HushTheme.typography.caption, color = colors.muted)
         HushSpacer(12)
         Text("Support: ${HushConfig.SUPPORT_EMAIL}", style = HushTheme.typography.caption, color = colors.muted)
     }
@@ -277,7 +280,7 @@ fun PrivacyScreen(onBack: () -> Unit) {
     val colors = HushTheme.colors
     HushScreen(title = "Datenschutz", onBack = onBack) {
         listOf(
-            "Alles bleibt auf dem Gerät. ${HushConfig.APP_NAME} hat keine Internet-Berechtigung.",
+            "Alles bleibt auf dem Gerät. Die einzige Netzverbindung ist der optionale Update-Abruf von github.com, standardmäßig aus. GitHub sieht dabei deine IP-Adresse, sonst nichts.",
             "Gespeichert werden: Favoriten, Namen, Ordner, Sperren, Pläne, Limits, Filterregeln, gefilterte Benachrichtigungen (30 Tage), Einstellungen.",
             "Nutzungsstatistik wird nur gelesen, wenn du den Nutzungszugriff erteilst, und nicht dauerhaft gespeichert.",
             "Die Bedienungshilfe liest den Namen der App im Vordergrund. Nur für YouTube, Instagram, Facebook und Snapchat werden Oberflächen-Kennungen geprüft, um Kurzvideos zu erkennen. Nichts davon wird gespeichert.",
@@ -342,9 +345,4 @@ fun OnboardingScreen(onDone: () -> Unit, viewModel: SettingsViewModel = hiltView
         HushSpacer(24)
         HushPrimaryButton("Los", onClick = { viewModel.setOnboardingDone(); onDone() })
     }
-}
-
-/** Version info is filled by the app module at start so this module needs no BuildConfig. */
-object BuildInfo {
-    var versionName: String = "dev"
 }

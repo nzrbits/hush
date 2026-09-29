@@ -14,8 +14,8 @@ android {
         applicationId = "com.nzrbits.hush"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.1.3"
+        versionCode = 5
+        versionName = "0.1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -54,6 +54,7 @@ dependencies {
     implementation(project(":feature:wellbeing"))
     implementation(project(":feature:notifications"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:updates"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

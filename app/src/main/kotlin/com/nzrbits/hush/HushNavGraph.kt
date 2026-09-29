@@ -27,6 +27,7 @@ import com.nzrbits.hush.feature.settings.PermissionsScreen
 import com.nzrbits.hush.feature.settings.PrivacyScreen
 import com.nzrbits.hush.feature.settings.SettingsNavigation
 import com.nzrbits.hush.feature.settings.SettingsScreen
+import com.nzrbits.hush.feature.updates.UpdateSettingsScreen
 import com.nzrbits.hush.feature.wellbeing.ui.BlockAppScreen
 import com.nzrbits.hush.feature.wellbeing.ui.LimitsScreen
 import com.nzrbits.hush.feature.wellbeing.ui.ScheduleEditScreen
@@ -116,6 +117,7 @@ fun HushNavGraph(navController: NavHostController, startDestination: String, hom
                     about = { go(HushRoutes.SETTINGS_ABOUT) },
                     privacy = { go(HushRoutes.SETTINGS_PRIVACY) },
                     faq = { go(HushRoutes.SETTINGS_FAQ) },
+                    updates = { go(HushRoutes.SETTINGS_UPDATES) },
                 ),
             )
         }
@@ -129,5 +131,6 @@ fun HushNavGraph(navController: NavHostController, startDestination: String, hom
         composable(HushRoutes.SETTINGS_ABOUT) { AboutScreen(onBack = back) }
         composable(HushRoutes.SETTINGS_PRIVACY) { PrivacyScreen(onBack = back) }
         composable(HushRoutes.SETTINGS_FAQ) { FaqScreen(onBack = back) }
+        composable(HushRoutes.SETTINGS_UPDATES) { UpdateSettingsScreen(onBack = back) }
     }
 }
