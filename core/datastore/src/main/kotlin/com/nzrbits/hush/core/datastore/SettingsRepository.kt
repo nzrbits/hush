@@ -58,6 +58,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val charging = booleanPreferencesKey("home.chargingAnimation")
         val autoKeyboard = booleanPreferencesKey("home.autoKeyboard")
         val hideNavBar = booleanPreferencesKey("home.hideNavigationBar")
+        val dividerMinimal = booleanPreferencesKey("home.dividerMinimal")
+        val dividerCozy = booleanPreferencesKey("home.dividerCozy")
 
         val themeMode = stringPreferencesKey("appearance.themeMode")
         val cozyPalette = stringPreferencesKey("appearance.cozyPalette")
@@ -70,9 +72,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val sceneDensity = stringPreferencesKey("appearance.sceneDensity")
         val reduceMotion = booleanPreferencesKey("appearance.reduceMotion")
 
-        val swipeUp = stringPreferencesKey("gestures.swipeUp")
-        val swipeDown = stringPreferencesKey("gestures.swipeDown")
-        val doubleTap = stringPreferencesKey("gestures.doubleTap")
+        // v2 keys: the defaults changed (drawer from the right), so old values are not carried over.
+        val swipeUp = stringPreferencesKey("gestures.v2.swipeUp")
+        val swipeDown = stringPreferencesKey("gestures.v2.swipeDown")
+        val swipeLeft = stringPreferencesKey("gestures.v2.swipeLeft")
+        val swipeRight = stringPreferencesKey("gestures.v2.swipeRight")
+        val doubleTap = stringPreferencesKey("gestures.v2.doubleTap")
 
         val shortVideo = booleanPreferencesKey("wellbeing.shortVideo")
         val shortVideoPlatforms = stringSetPreferencesKey("wellbeing.shortVideoPlatforms")
@@ -104,6 +109,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             showChargingAnimation = this[Keys.charging] ?: true,
             autoKeyboardInDrawer = this[Keys.autoKeyboard] ?: true,
             hideNavigationBar = this[Keys.hideNavBar] ?: true,
+            dividerMinimal = this[Keys.dividerMinimal] ?: true,
+            dividerCozy = this[Keys.dividerCozy] ?: false,
         ),
         appearance = AppearanceSettings(
             themeMode = enum(Keys.themeMode, ThemeMode.MINIMAL),
@@ -118,8 +125,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             reduceMotion = this[Keys.reduceMotion] ?: false,
         ),
         gestures = GestureSettings(
-            swipeUp = enum(Keys.swipeUp, GestureAction.OPEN_DRAWER),
+            swipeUp = enum(Keys.swipeUp, GestureAction.NONE),
             swipeDown = enum(Keys.swipeDown, GestureAction.OPEN_NOTIFICATIONS),
+            swipeLeft = enum(Keys.swipeLeft, GestureAction.OPEN_DRAWER),
+            swipeRight = enum(Keys.swipeRight, GestureAction.NONE),
             doubleTap = enum(Keys.doubleTap, GestureAction.LOCK_SCREEN),
         ),
         wellbeing = WellbeingSettings(
@@ -159,6 +168,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             p[Keys.charging] = h.showChargingAnimation
             p[Keys.autoKeyboard] = h.autoKeyboardInDrawer
             p[Keys.hideNavBar] = h.hideNavigationBar
+            p[Keys.dividerMinimal] = h.dividerMinimal
+            p[Keys.dividerCozy] = h.dividerCozy
         }
     }
 
@@ -184,6 +195,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             val g = transform(p.toSettings().gestures)
             p[Keys.swipeUp] = g.swipeUp.name
             p[Keys.swipeDown] = g.swipeDown.name
+            p[Keys.swipeLeft] = g.swipeLeft.name
+            p[Keys.swipeRight] = g.swipeRight.name
             p[Keys.doubleTap] = g.doubleTap.name
         }
     }

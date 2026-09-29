@@ -5,7 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -114,15 +114,21 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             .fillMaxSize()
             .background(colors.background)
             .pointerInput(settings.gestures) {
-                var total = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { total = 0f },
+                // One detector for both axes: the dominant direction at the end decides.
+                var dx = 0f
+                var dy = 0f
+                detectDragGestures(
+                    onDragStart = { dx = 0f; dy = 0f },
                     onDragEnd = {
-                        if (abs(total) > swipeThresholdPx) {
-                            handle(viewModel.perform(if (total < 0) settings.gestures.swipeUp else settings.gestures.swipeDown))
+                        val g = settings.gestures
+                        val action = when {
+                            abs(dx) > abs(dy) && abs(dx) > swipeThresholdPx -> if (dx < 0) g.swipeLeft else g.swipeRight
+                            abs(dy) >= abs(dx) && abs(dy) > swipeThresholdPx -> if (dy < 0) g.swipeUp else g.swipeDown
+                            else -> null
                         }
+                        action?.let { handle(viewModel.perform(it)) }
                     },
-                    onVerticalDrag = { _, dragAmount -> total += dragAmount },
+                    onDrag = { change, amount -> change.consume(); dx += amount.x; dy += amount.y },
                 )
             }
             .pointerInput(settings.gestures) {
@@ -161,7 +167,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 modifier = Modifier.clickable(onClick = navigation.openSettings),
             )
             Spacer(Modifier.height(16.dp))
-            HushDivider()
+            if (if (cozy) settings.home.dividerCozy else settings.home.dividerMinimal) HushDivider()
 
             HomeUpdateLine(showMascot = cozy && settings.appearance.showMascot)
 
@@ -191,7 +197,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 val list = favorites
                 if (list != null && list.isEmpty()) {
                     Text(
-                        "Keine Favoriten. Nach oben wischen, App lang drücken, „Zu Favoriten hinzufügen“.",
+                        "Keine Favoriten. Von rechts wischen, App lang drücken, „Zu Favoriten hinzufügen“.",
                         style = HushTheme.typography.body,
                         color = colors.muted,
                     )
@@ -214,6 +220,8 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 MascotBubble(
                     text = calendarLine(calendar, now),
                     state = if (calendar is CalendarState.Event) MascotState.TALK else MascotState.IDLE,
+                    mascotSize = 42.dp,
+                    compact = true,
                     onTap = {
                         when (val c = calendar) {
                             CalendarState.NoPermission -> askCalendar.launch(android.Manifest.permission.READ_CALENDAR)

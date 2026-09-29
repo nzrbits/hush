@@ -50,9 +50,12 @@ enum class GestureAction(val label: String) {
     OPEN_NOTIFICATION_LOG("Gefilterte Meldungen öffnen"),
 }
 
+/** Swipe directions are named by where the finger goes; "swipeLeft" starts at the right. */
 data class GestureSettings(
-    val swipeUp: GestureAction = GestureAction.OPEN_DRAWER,
+    val swipeUp: GestureAction = GestureAction.NONE,
     val swipeDown: GestureAction = GestureAction.OPEN_NOTIFICATIONS,
+    val swipeLeft: GestureAction = GestureAction.OPEN_DRAWER,
+    val swipeRight: GestureAction = GestureAction.NONE,
     val doubleTap: GestureAction = GestureAction.LOCK_SCREEN,
 )
 
@@ -80,6 +83,9 @@ data class HomeSettings(
     val autoKeyboardInDrawer: Boolean = true,
     /** Hide Android's navigation bar (3-button or gesture pill); a swipe from the bottom edge shows it briefly. */
     val hideNavigationBar: Boolean = true,
+    /** Divider under the clock, remembered per skin: on in Minimal, off in Cozy by default. */
+    val dividerMinimal: Boolean = true,
+    val dividerCozy: Boolean = false,
 )
 
 data class AppearanceSettings(

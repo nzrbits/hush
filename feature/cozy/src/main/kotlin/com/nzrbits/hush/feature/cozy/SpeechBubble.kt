@@ -33,9 +33,14 @@ fun MascotBubble(
     modifier: Modifier = Modifier,
     mascotSize: Dp = 84.dp,
     onTap: (() -> Unit)? = null,
+    /** Half-size variant for the home screen: 42 dp mascot, caption text, tighter padding. */
+    compact: Boolean = false,
 ) {
     val colors = HushTheme.colors
-    val shape = RoundedCornerShape(HushTheme.shapes.card.coerceAtLeast(6.dp))
+    val shape = RoundedCornerShape((if (compact) HushTheme.shapes.card / 2 else HushTheme.shapes.card).coerceAtLeast(6.dp))
+    val textStyle = if (compact) HushTheme.typography.caption else HushTheme.typography.bubble
+    val hPad = if (compact) 10.dp else 14.dp
+    val vPad = if (compact) 6.dp else 10.dp
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -72,9 +77,9 @@ fun MascotBubble(
                     .clip(shape)
                     .background(colors.bubble)
                     .border(1.dp, colors.line, shape)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = hPad, vertical = vPad),
             ) {
-                Text(text = text, style = HushTheme.typography.bubble, color = colors.bubbleText)
+                Text(text = text, style = textStyle, color = colors.bubbleText)
             }
         }
     }

@@ -176,6 +176,13 @@ fun HomeSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltVi
         HushSectionHeader("Weiteres")
         HushSwitchRow("Ladeanzeige", subtitle = "Zeigt „Lädt · 80 %“ unter dem Datum", checked = s.home.showChargingAnimation, onCheckedChange = { v -> viewModel.updateHome { it.copy(showChargingAnimation = v) } })
         HushSwitchRow("Tastatur automatisch öffnen", subtitle = "In der App-Suche", checked = s.home.autoKeyboardInDrawer, onCheckedChange = { v -> viewModel.updateHome { it.copy(autoKeyboardInDrawer = v) } })
+        val cozyNow = s.appearance.themeMode == ThemeMode.COZY
+        HushSwitchRow(
+            "Trennstrich unter der Uhr",
+            subtitle = if (cozyNow) "Wird für Cozy gemerkt" else "Wird für Minimal gemerkt",
+            checked = if (cozyNow) s.home.dividerCozy else s.home.dividerMinimal,
+            onCheckedChange = { v -> viewModel.updateHome { if (cozyNow) it.copy(dividerCozy = v) else it.copy(dividerMinimal = v) } },
+        )
         HushSwitchRow(
             "Android-Navigationsleiste ausblenden",
             subtitle = "Dreieck, Kreis, Viereck verschwinden. Vom unteren Rand nach oben wischen zeigt sie kurz.",
@@ -245,6 +252,8 @@ fun GesturesScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMo
     val colors = HushTheme.colors
     val options = GestureAction.entries
     HushScreen(title = "Gesten", onBack = onBack) {
+        GestureRow("Von rechts wischen", s.gestures.swipeLeft, options) { v -> viewModel.updateGestures { it.copy(swipeLeft = v) } }
+        GestureRow("Von links wischen", s.gestures.swipeRight, options) { v -> viewModel.updateGestures { it.copy(swipeRight = v) } }
         GestureRow("Nach oben wischen", s.gestures.swipeUp, options) { v -> viewModel.updateGestures { it.copy(swipeUp = v) } }
         GestureRow("Nach unten wischen", s.gestures.swipeDown, options) { v -> viewModel.updateGestures { it.copy(swipeDown = v) } }
         GestureRow("Doppeltippen", s.gestures.doubleTap, options) { v -> viewModel.updateGestures { it.copy(doubleTap = v) } }
@@ -382,7 +391,7 @@ fun OnboardingScreen(onDone: () -> Unit, viewModel: SettingsViewModel = hiltView
         HushCard {
             Column {
                 Text("3. Favoriten", style = HushTheme.typography.body, color = colors.text)
-                Text("Nach oben wischen, App lang drücken, „Zu Favoriten hinzufügen“.", style = HushTheme.typography.caption, color = colors.muted)
+                Text("Von rechts wischen, App lang drücken, „Zu Favoriten hinzufügen“.", style = HushTheme.typography.caption, color = colors.muted)
             }
         }
         HushSpacer(24)
