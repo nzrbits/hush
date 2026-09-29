@@ -25,7 +25,7 @@ import com.nzrbits.hush.core.designsystem.theme.HushTheme
  * LEDs with visible gaps, unlit LEDs drawn faintly, a pixel calendar icon on the left and
  * the time in 5x7 dot digits. Static, no blinking: the launcher stays calm.
  *
- * Grid: 9 rows x 38 columns. Icon at columns 1..8, digits from column 12.
+ * Grid: 9 rows x 38 columns. Icon at columns 2..8, digits from column 13.
  */
 @Composable
 fun LedMatrixClock(
@@ -96,10 +96,10 @@ private val DIGITS: Map<Char, List<String>> = mapOf(
     '9' to listOf(".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."),
 )
 
-/** 8x8 calendar: two header rows, a body with the day number in a 3x5 face when it fits, else a grid. */
+/** 7 columns wide: two header rows exactly as wide as the two 3x5 day digits below. */
 private fun calendarIcon(day: Int): List<String> {
-    val body = if (day in 1..31) dayGlyph(day) else listOf("#.#.#.#.", "........", "#.#.#.#.", "........", "#.#.#.#.", "........")
-    return listOf("TTTTTTTT", "TTTTTTTT") + body
+    val body = if (day in 1..31) dayGlyph(day) else listOf(".......", "#.#.#.#", ".......", "#.#.#.#", ".......", "#.#.#.#")
+    return listOf("TTTTTTT", "TTTTTTT") + body
 }
 
 private val SMALL: Map<Char, List<String>> = mapOf(
@@ -115,26 +115,26 @@ private val SMALL: Map<Char, List<String>> = mapOf(
     '9' to listOf("###", "#.#", "###", "..#", "###"),
 )
 
-/** Six body rows: one blank, five with the day number (two 3x5 digits with a 1-column gap), centred in 8 columns. */
+/** Six body rows: one blank, five with the day number (two 3x5 digits with a 1-column gap), 7 columns. */
 private fun dayGlyph(day: Int): List<String> {
     val text = day.toString().padStart(2, '0')
     val a = SMALL.getValue(text[0])
     val b = SMALL.getValue(text[1])
-    val rows = (0 until 5).map { r -> ".${a[r]}.${b[r]}." }
-    return listOf("........") + rows
+    val rows = (0 until 5).map { r -> "${a[r]}.${b[r]}" }
+    return listOf(".......") + rows
 }
 
 private fun buildMatrix(digits: String, day: Int, cols: Int, rows: Int): Array<Array<Cell>> {
     val m = Array(rows) { Array(cols) { Cell.OFF } }
-    // Calendar icon: columns 1..8, rows 0..7.
+    // Calendar icon: columns 2..8, rows 0..7.
     calendarIcon(day).forEachIndexed { y, row ->
         row.forEachIndexed { x, c ->
             val cell = when (c) { 'T' -> Cell.ICON_TOP; '#' -> Cell.ICON_BODY; else -> null }
-            if (cell != null && y < rows && x + 1 < cols) m[y][x + 1] = cell
+            if (cell != null && y < rows && x + 2 < cols) m[y][x + 2] = cell
         }
     }
-    // Time: right-aligned block of up to "HH:MM", digits 5 wide, colon 1 wide, 1-column gaps, rows 1..7.
-    var x = 12
+    // Time: "HH:MM" from column 13, digits 5 wide, colon 1 wide, 1-column gaps, rows 1..7.
+    var x = 13
     val top = 1
     digits.forEach { ch ->
         if (ch == ':') {

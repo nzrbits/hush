@@ -17,21 +17,26 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** 13x13 pixel gear. '#' is a lit pixel. */
+/**
+ * 15x15 pixel gear: eight square teeth on a ring with a hollow centre, the classic
+ * settings cog. '#' is a lit pixel.
+ */
 private val GEAR = listOf(
-    "....##.##....",
-    "...#######...",
-    "..#########..",
-    ".####...####.",
-    "####.....####",
-    "###.......###",
-    ".##.......##.",
-    "###.......###",
-    "####.....####",
-    ".####...####.",
-    "..#########..",
-    "...#######...",
-    "....##.##....",
+    "......###......",
+    "...#..###..#...",
+    "..###.###.###..",
+    "..#########.#..",
+    "...####.####...",
+    "..###.....###..",
+    "###.........###",
+    "###.........###",
+    "###.........###",
+    "..###.....###..",
+    "...####.####...",
+    "..#.#########..",
+    "..###.###.###..",
+    "...#..###..#...",
+    "......###......",
 )
 
 /** Draws a pixel pattern at [size] with crisp cells. */
@@ -48,16 +53,16 @@ fun PixelGlyph(rows: List<String>, color: Color, size: Dp, modifier: Modifier = 
     }
 }
 
-/** Retro gear button, 48 dp touch target, 24 dp glyph. */
+/** Small retro gear button: [glyph] dp visible, 40 dp touch target. */
 @Composable
-fun PixelGearButton(color: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PixelGearButton(color: Color, onClick: () -> Unit, modifier: Modifier = Modifier, glyph: Dp = 18.dp) {
     Box(
         modifier = modifier
-            .size(48.dp)
+            .size(40.dp)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button; contentDescription = "Einstellungen" },
         contentAlignment = Alignment.Center,
     ) {
-        PixelGlyph(rows = GEAR, color = color, size = 26.dp)
+        PixelGlyph(rows = GEAR, color = color, size = glyph)
     }
 }

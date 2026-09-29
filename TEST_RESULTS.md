@@ -94,6 +94,15 @@ with adb in between, which resets the installer of record, so the dialog showed 
 Reproduce on the phone: install 0.1.5 through the in-app updater, then the 0.1.6 update
 should go through without a dialog.
 
+## Fourth phone feedback (0.1.6 -> 0.1.7)
+
+| Feedback | Fix |
+|---|---|
+| Gear not recognisable, too big, should sit under the date | New 15x15 cog with eight teeth and a hollow centre, 18 dp glyph in a 40 dp target, right under the date line |
+| Calendar header two pixels too wide on the left | Header is now exactly 7 columns, as wide as the two day digits; the icon moved one column right, the time one column right |
+| Shortcuts only on the left and smaller than the apps | Left corner and right corner (third one in the middle), same 22 sp list style and colour as the favourites |
+| Mr. Nook should sit at the bottom above the left shortcut | Moved from under the date to directly above the shortcut row |
+
 ## Third phone feedback (0.1.5 -> 0.1.6)
 
 | Feedback | Fix |

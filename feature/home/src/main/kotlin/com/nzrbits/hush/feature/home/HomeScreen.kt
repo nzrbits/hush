@@ -149,10 +149,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
         ) {
             // Clock sits right under the status bar; AM/PM is a small suffix, not part of the pixel digits.
             val (digits, suffix) = formatTime(now, settings.home.timeFormat, LocalContext.current)
-            // LED matrix panel with the day in the calendar icon; the gear sits above it, top right.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                PixelGearButton(color = colors.muted, onClick = navigation.openSettings)
-            }
+            // LED matrix panel with the day in the calendar icon.
             LedMatrixClock(digits = digits, dayOfMonth = now.dayOfMonth)
             // Date, AM/PM and charging share one line at one size.
             val chargingText = when {
@@ -166,19 +163,11 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 color = colors.muted,
                 modifier = Modifier.padding(top = 12.dp),
             )
-
-            if (cozy && settings.appearance.showMascot) {
-                Spacer(Modifier.height(20.dp))
-                val focusActive = blockStatus.scheduled.isNotEmpty()
-                MascotBubble(
-                    text = if (focusActive) Sayings.focus(now) else Sayings.home(now),
-                    state = if (focusActive) MascotState.SLEEP else MascotState.IDLE,
-                    onTap = navigation.openWellbeing,
-                )
-            } else {
-                Spacer(Modifier.height(20.dp))
-                HushDivider()
+            // Small pixel gear under the date, right side.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                PixelGearButton(color = colors.muted, onClick = navigation.openSettings)
             }
+            if (!cozy) HushDivider()
 
             HomeUpdateLine(showMascot = cozy && settings.appearance.showMascot)
 
@@ -224,9 +213,19 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
                 }
             }
 
-            // Bottom-left shortcuts: built-ins (phone, camera, alarm) or any app, set in settings.
+            // Mr. Nook lives at the bottom, above the left shortcut.
+            if (cozy && settings.appearance.showMascot) {
+                val focusActive = blockStatus.scheduled.isNotEmpty()
+                MascotBubble(
+                    text = if (focusActive) Sayings.focus(now) else Sayings.home(now),
+                    state = if (focusActive) MascotState.SLEEP else MascotState.IDLE,
+                    onTap = navigation.openWellbeing,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+            }
+            // Shortcuts in the corners: one left, one right, a third in the middle. Same size as the app list.
             val shortcuts by viewModel.shortcuts.collectAsStateWithLifecycle()
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 shortcuts.forEach { s -> QuickAction(s.label) { viewModel.openShortcut(s) } }
             }
             hint?.let {
@@ -248,7 +247,7 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
     }
 }
 
-/** Bottom text action: 48 dp tall, same left edge as the app list, muted body text. */
+/** Shortcut in a bottom corner: same size and colour as the app list, 48 dp tall. */
 @Composable
 private fun QuickAction(label: String, onClick: () -> Unit) {
     Box(
@@ -259,8 +258,9 @@ private fun QuickAction(label: String, onClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            style = HushTheme.typography.body.copy(fontWeight = FontWeight.Medium),
-            color = HushTheme.colors.muted,
+            style = HushTheme.typography.listItem,
+            color = HushTheme.colors.text,
+            maxLines = 1,
         )
     }
 }
