@@ -70,6 +70,7 @@ class HomeViewModel @Inject constructor(
     private val systemActions: SystemActions,
     private val blockingRepository: BlockingRepository,
     private val dispatchers: AppDispatchers,
+    private val usage: com.nzrbits.hush.core.system.usage.UsageStatsSource,
 ) : ViewModel() {
     val settings: StateFlow<HushSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HushSettings())
 
@@ -86,6 +87,18 @@ class HomeViewModel @Inject constructor(
             delay(60_000L - (ms % 60_000L) + 20)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), clock.nowLocal().toLocalDateTime())
+
+    /** Today's screen time for the mascot line, refreshed every five minutes. Null without usage access. */
+    val screenTimeToday: StateFlow<String?> = now
+        .map { it.minute / 5 }
+        .distinctUntilChanged()
+        .mapLatest {
+            if (!usage.hasUsageAccess()) null else runCatching { usage.today().totalMillis }.getOrNull()?.let { ms ->
+                if (ms < 60_000) null else com.nzrbits.hush.core.common.time.Durations.formatMillisShort(ms)
+            }
+        }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** A blocked notice shows for 20 seconds, and never past the end of the block. */
     val blockedEvent: StateFlow<BlockedEvent?> = blocking.lastBlocked

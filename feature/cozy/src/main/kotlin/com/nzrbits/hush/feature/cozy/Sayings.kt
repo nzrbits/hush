@@ -79,7 +79,27 @@ object Sayings {
         "Die Zeit ist um. Kein Drama, nur ein Hinweis.",
     )
 
-    fun home(now: LocalDateTime): String = pick(home.getValue(daypart(now.hour)), now)
+    /** Home screen: Mr. Nook is the door to focus, blocks and screen time, and says so. */
+    private val focusHome = listOf(
+        "Tipp mich an für Fokus & Bildschirmzeit.",
+        "Sperren, Pläne, Limits: alles bei mir.",
+        "Wie lange warst du heute am Handy? Tipp mich an.",
+        "Ich halte die Tür zu, wenn du willst. Tipp mich an.",
+        "Fokuszeit einstellen? Hier entlang.",
+        "Weniger Handy heute? Ich helfe. Tipp mich an.",
+    )
+
+    /**
+     * Home line. With [screenTimeToday] (e.g. "1 Std. 20 Min.") it opens with today's time;
+     * without usage access it is just the focus line.
+     */
+    fun home(now: LocalDateTime, screenTimeToday: String? = null): String {
+        val line = pick(focusHome, now)
+        return if (screenTimeToday != null) "Heute $screenTimeToday am Handy. $line" else line
+    }
+
+    /** The old daypart lines, kept for the update notice and other cozy places. */
+    fun daypartLine(now: LocalDateTime): String = pick(home.getValue(daypart(now.hour)), now)
     fun settings(now: LocalDateTime): String = pick(settings, now)
     fun blocked(now: LocalDateTime): String = pick(blocked, now)
     fun focus(now: LocalDateTime): String = pick(focus, now)

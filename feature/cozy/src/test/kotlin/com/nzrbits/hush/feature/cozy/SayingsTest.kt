@@ -19,6 +19,14 @@ class SayingsTest {
         val a = Sayings.home(LocalDateTime.of(2026, 9, 28, 20, 5))
         val b = Sayings.home(LocalDateTime.of(2026, 9, 28, 20, 55))
         assertThat(a).isEqualTo(b)
+        assertThat(Sayings.daypartLine(LocalDateTime.of(2026, 9, 28, 20, 5))).isEqualTo(Sayings.daypartLine(LocalDateTime.of(2026, 9, 28, 20, 55)))
+    }
+
+    @Test
+    fun homeLineMentionsScreenTimeWhenKnown() {
+        val now = LocalDateTime.of(2026, 9, 28, 9, 0)
+        assertThat(Sayings.home(now, "1 Std. 20 Min.")).startsWith("Heute 1 Std. 20 Min. am Handy.")
+        assertThat(Sayings.home(now, null)).doesNotContain("Heute")
     }
 
     @Test

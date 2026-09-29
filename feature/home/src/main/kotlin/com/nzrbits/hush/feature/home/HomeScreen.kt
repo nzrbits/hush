@@ -216,8 +216,9 @@ fun HomeScreen(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMo
             // Mr. Nook lives at the bottom, above the left shortcut.
             if (cozy && settings.appearance.showMascot) {
                 val focusActive = blockStatus.scheduled.isNotEmpty()
+                val screenTime by viewModel.screenTimeToday.collectAsStateWithLifecycle()
                 MascotBubble(
-                    text = if (focusActive) Sayings.focus(now) else Sayings.home(now),
+                    text = if (focusActive) Sayings.focus(now) else Sayings.home(now, screenTime),
                     state = if (focusActive) MascotState.SLEEP else MascotState.IDLE,
                     onTap = navigation.openWellbeing,
                     modifier = Modifier.padding(bottom = 12.dp),
@@ -259,7 +260,7 @@ private fun QuickAction(label: String, onClick: () -> Unit) {
         Text(
             text = label,
             style = HushTheme.typography.listItem,
-            color = HushTheme.colors.text,
+            color = HushTheme.colors.muted,
             maxLines = 1,
         )
     }
