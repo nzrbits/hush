@@ -1,6 +1,7 @@
 package com.nzrbits.hush.feature.apps
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -87,13 +89,23 @@ fun DrawerScreen(
         map
     }
 
+    val closeThresholdPx = with(LocalDensity.current) { 72.dp.toPx() }
     Column(
         Modifier
             .fillMaxSize()
             .background(colors.background)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding(),
+            .imePadding()
+            // Swipe to the right (from the left) closes the drawer, mirroring how it was opened.
+            .pointerInput(Unit) {
+                var dx = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { dx = 0f },
+                    onDragEnd = { if (dx > closeThresholdPx) { viewModel.clearQuery(); onClose() } },
+                    onHorizontalDrag = { change, amount -> change.consume(); dx += amount },
+                )
+            },
     ) {
         BasicTextField(
             value = state.query,
